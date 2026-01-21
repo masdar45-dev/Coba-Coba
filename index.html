@@ -3,99 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NexHome Masdar - Custom AI Vision</title>
+    <title>NexHome Masdar - Integrated GitHub AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- TensorFlow.js Library -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <!-- TensorFlow JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0"></script>
     <style>
-        :root { --blue: #3b82f6; --bg: #f8fafc; }
+        :root { --blue: #3b82f6; --bg: #f1f5f9; }
         body { font-family: 'Outfit', sans-serif; background-color: var(--bg); color: #1e293b; }
-        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.5); }
-        .nav-btn.active { background: #3b82f6; color: white; box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3); }
+        .glass { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.5); }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
         .online { background: #10b981; box-shadow: 0 0 8px #10b981; }
         .offline { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
         #ai-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        .nav-btn.active { background: #3b82f6; color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
         .hidden { display: none; }
     </style>
 </head>
 <body class="pb-24">
 
-    <!-- Status Bar -->
-    <header class="p-6 max-w-6xl mx-auto flex justify-between items-center">
+    <!-- Header Diagnostics -->
+    <header class="p-6 max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
         <div class="flex items-center gap-3">
             <div class="p-3 bg-blue-600 rounded-2xl text-white shadow-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
             </div>
             <div>
-                <h1 class="text-xl font-bold">NexHome <span class="text-blue-600">Vision</span></h1>
-                <p id="clock" class="text-[10px] font-black text-blue-600 uppercase tracking-widest">00:00:00</p>
+                <h1 class="text-xl font-bold">NexHome <span class="text-blue-600">Masdar</span></h1>
+                <p id="clock" class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Sinkronisasi Waktu...</p>
             </div>
         </div>
+        
         <div class="flex gap-3">
             <div class="glass px-4 py-2 rounded-xl flex items-center gap-2">
                 <span id="db-status" class="status-dot offline"></span>
-                <span class="text-[9px] font-bold uppercase">Cloud</span>
+                <span class="text-[9px] font-bold uppercase text-slate-500">Cloud Sync</span>
             </div>
             <div class="glass px-4 py-2 rounded-xl flex items-center gap-2">
-                <span id="ai-status" class="status-dot offline"></span>
-                <span class="text-[9px] font-bold uppercase tracking-tighter">AI Model</span>
+                <span id="esp-status" class="status-dot offline"></span>
+                <span class="text-[9px] font-bold uppercase text-slate-500">Hardware</span>
             </div>
         </div>
     </header>
 
     <main class="max-w-6xl mx-auto px-6">
-        <!-- Navigasi -->
-        <div class="flex bg-white/50 p-1.5 rounded-2xl shadow-inner inline-flex mb-6">
-            <button id="nav-home" onclick="switchTab('home')" class="nav-btn active px-6 py-2 rounded-xl text-xs font-bold transition-all">UTAMA</button>
-            <button id="nav-cctv" onclick="switchTab('cctv')" class="nav-btn px-6 py-2 rounded-xl text-xs font-bold transition-all">KAMERA AI</button>
-            <button id="nav-config" onclick="switchTab('config')" class="nav-btn px-6 py-2 rounded-xl text-xs font-bold transition-all">PENGATURAN</button>
+        <!-- Navigation -->
+        <div class="flex bg-white/50 p-1.5 rounded-2xl shadow-inner inline-flex mb-8">
+            <button id="nav-home" onclick="switchTab('home')" class="nav-btn active px-6 py-2.5 rounded-xl text-xs font-bold transition-all">UTAMA</button>
+            <button id="nav-ai" onclick="switchTab('ai')" class="nav-btn px-6 py-2.5 rounded-xl text-xs font-bold transition-all">VISUAL AI</button>
+            <button id="nav-config" onclick="switchTab('config')" class="nav-btn px-6 py-2.5 rounded-xl text-xs font-bold transition-all">SISTEM</button>
         </div>
 
-        <!-- TAB UTAMA -->
-        <div id="tab-home" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <!-- Relay & Sensor akan muncul di sini via JS -->
+        <!-- SECTION: HOME -->
+        <div id="tab-home" class="space-y-6">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass p-6 rounded-[2.5rem] flex items-center justify-between">
+                    <div><p class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Suhu Ruangan</p><h2 id="temp" class="text-3xl font-bold">--°</h2></div>
+                    <span class="text-2xl opacity-50">🌡️</span>
+                </div>
+                <div class="glass p-6 rounded-[2.5rem] flex items-center justify-between">
+                    <div><p class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Kelembapan</p><h2 id="hum" class="text-3xl font-bold">--%</h2></div>
+                    <span class="text-2xl opacity-50">💧</span>
+                </div>
+            </div>
+            <div id="relay-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
         </div>
 
-        <!-- TAB KAMERA AI -->
-        <div id="tab-cctv" class="hidden space-y-6">
-            <div class="relative bg-black rounded-[2.5rem] overflow-hidden aspect-video shadow-2xl border-4 border-white/50">
+        <!-- SECTION: VISUAL AI -->
+        <div id="tab-ai" class="hidden space-y-6">
+            <div class="relative bg-black rounded-[2.5rem] overflow-hidden aspect-video shadow-2xl border-4 border-white">
                 <video id="webcam" autoplay muted playsinline class="w-full h-full object-cover"></video>
                 <canvas id="ai-canvas"></canvas>
                 <div class="absolute top-6 left-6 flex flex-col gap-2">
-                    <div id="ai-label" class="bg-blue-600 text-white text-[9px] font-bold px-4 py-1.5 rounded-full flex items-center gap-2 shadow-lg">
-                        SISTEM AI: <span id="model-state">LOADING...</span>
+                    <div class="bg-blue-600/90 backdrop-blur-md text-white text-[9px] font-bold px-4 py-2 rounded-full flex items-center gap-2 shadow-lg">
+                        <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div> 
+                        MODEL GITHUB: <span id="ai-status-text">MEMUAT MODEL...</span>
                     </div>
                 </div>
             </div>
-            <div class="glass p-6 rounded-[2rem] h-48 overflow-y-auto" id="alert-logs">
-                <p class="text-xs text-slate-400 italic">Menunggu deteksi objek mencurigakan...</p>
+            <div class="glass p-6 rounded-[2rem] h-48 overflow-y-auto" id="ai-logs">
+                <p class="text-[10px] text-slate-400 italic">Menunggu inisialisasi model dari GitHub...</p>
             </div>
         </div>
 
-        <!-- TAB PENGATURAN -->
+        <!-- SECTION: CONFIG -->
         <div id="tab-config" class="hidden space-y-6">
-            <div class="glass p-8 rounded-[3rem]">
-                <h3 class="font-bold mb-4">Konfigurasi Model GitHub</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-[10px] font-bold text-slate-400 uppercase">Path Model (Raw GitHub)</label>
-                        <input type="text" id="input-model-url" value="https://raw.githubusercontent.com/username/repo/main/models/model.json" class="w-full mt-2 p-4 bg-slate-50 rounded-2xl text-xs border-none outline-none focus:ring-2 focus:ring-blue-500">
-                        <p class="text-[9px] text-slate-400 mt-2">Ganti 'username/repo/main' dengan detail GitHub Anda.</p>
-                    </div>
-                    <button onclick="reloadCustomModel()" class="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl text-xs hover:bg-blue-700 transition-all">TERAPKAN MODEL GITHUB</button>
+            <div class="glass p-8 rounded-[3rem] space-y-8">
+                <div>
+                    <h3 class="font-bold text-slate-800 mb-4">Pengaturan Nama Saklar</h3>
+                    <div id="naming-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
                 </div>
                 
-                <h3 class="font-bold mt-8 mb-4">Penamaan Saklar</h3>
-                <div id="naming-list" class="space-y-3"></div>
+                <div class="pt-4 border-t border-slate-100">
+                    <h3 class="font-bold text-slate-800 mb-2">Sumber Model AI</h3>
+                    <p class="text-[10px] text-slate-400 mb-4 italic">Masukkan link RAW model.json dari folder /models/ di GitHub Anda.</p>
+                    <input type="text" id="model-url" placeholder="https://raw.githubusercontent.com/.../model.json" class="w-full p-4 bg-slate-50 rounded-2xl text-xs border-none outline-none focus:ring-2 focus:ring-blue-500">
+                    <button onclick="reloadModel()" class="w-full mt-4 py-4 bg-slate-900 text-white font-bold rounded-2xl text-xs hover:bg-black transition-all">HUBUNGKAN KE GITHUB</button>
+                </div>
             </div>
         </div>
     </main>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCVY-tSDQvob6kYB8-ebLMNVb3Rge1mtx8",
@@ -106,132 +117,132 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const basePath = "nexhome_v3";
+        const path = "nexhome_v3";
 
-        let customModel;
-        const video = document.getElementById('webcam');
-        const canvas = document.getElementById('ai-canvas');
-        const ctx = canvas.getContext('2d');
+        let myModel, video, canvas, ctx;
 
-        // --- MANAJEMEN TAB ---
+        // --- TAB SYSTEM ---
         window.switchTab = (tab) => {
-            ['home', 'cctv', 'config'].forEach(t => {
+            ['home', 'ai', 'config'].forEach(t => {
                 document.getElementById(`tab-${t}`).classList.add('hidden');
                 document.getElementById(`nav-${t}`).classList.remove('active');
             });
             document.getElementById(`tab-${tab}`).classList.remove('hidden');
             document.getElementById(`nav-${tab}`).classList.add('active');
-            if(tab === 'cctv') startCamera();
+            if(tab === 'ai') startCamera();
         };
 
         // --- FIREBASE SYNC ---
-        onValue(ref(db, basePath), (snap) => {
+        onValue(ref(db, path), (snap) => {
             const data = snap.val() || {};
-            const homeTab = document.getElementById('tab-home');
-            const namingList = document.getElementById('naming-list');
             
-            homeTab.innerHTML = '';
-            namingList.innerHTML = '';
+            // Connection
+            const isOnline = (Date.now() - (data.last_online || 0)) < 15000;
+            document.getElementById('esp-status').className = isOnline ? 'status-dot online' : 'status-dot offline';
+            
+            document.getElementById('temp').innerText = (data.sensors?.temperature || '--') + '°';
+            document.getElementById('hum').innerText = (data.sensors?.humidity || '--') + '%';
+
+            // Relays & Naming
+            const grid = document.getElementById('relay-grid');
+            const naming = document.getElementById('naming-grid');
+            grid.innerHTML = ''; naming.innerHTML = '';
 
             for(let i=1; i<=8; i++) {
                 const rid = `relay${i}`;
                 const isOn = data.states?.[rid] || false;
                 const name = data.names?.[rid] || `Saklar ${i}`;
 
-                // Card di Dashboard Utama
-                homeTab.innerHTML += `
-                    <div onclick="toggleRelay('${rid}', ${isOn})" class="glass p-6 rounded-[2rem] cursor-pointer transition-all ${isOn ? 'bg-white shadow-xl' : ''}">
-                        <div class="w-10 h-10 rounded-xl mb-4 flex items-center justify-center ${isOn ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}">
+                grid.innerHTML += `
+                    <div onclick="toggleRelay('${rid}', ${isOn})" class="glass p-6 rounded-[2rem] cursor-pointer transition-all ${isOn ? 'bg-white shadow-xl ring-2 ring-blue-500' : ''}">
+                        <div class="w-10 h-10 rounded-xl mb-4 flex items-center justify-center ${isOn ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-300'}">
                             ${isOn ? '💡' : '🔌'}
                         </div>
-                        <p class="text-xs font-bold text-slate-800">${name}</p>
+                        <p class="text-xs font-bold truncate">${name}</p>
                         <p class="text-[9px] font-black mt-1 ${isOn ? 'text-blue-600' : 'text-slate-400'}">${isOn ? 'ON' : 'OFF'}</p>
                     </div>`;
 
-                // Input Nama di Pengaturan
-                namingList.innerHTML += `
-                    <div class="flex items-center gap-4 bg-white/50 p-4 rounded-2xl border border-white">
-                        <span class="text-xs font-bold text-slate-400 w-8">#${i}</span>
-                        <input type="text" value="${name}" onchange="updateName('${rid}', this.value)" class="bg-transparent text-sm font-bold flex-1 outline-none">
+                naming.innerHTML += `
+                    <div class="flex items-center gap-3 bg-white/50 p-4 rounded-2xl border border-white">
+                        <span class="text-[10px] font-black text-slate-300">#${i}</span>
+                        <input type="text" value="${name}" onchange="updateName('${rid}', this.value)" class="bg-transparent text-xs font-bold flex-1 outline-none">
                     </div>`;
             }
         });
 
-        window.toggleRelay = (id, cur) => set(ref(db, `${basePath}/states/${id}`), !cur);
-        window.updateName = (id, val) => set(ref(db, `${basePath}/names/${id}`), val);
+        window.toggleRelay = (id, cur) => set(ref(db, `${path}/states/${id}`), !cur);
+        window.updateName = (id, val) => set(ref(db, `${path}/names/${id}`), val);
 
-        // --- AI VISION (GITHUB MODEL LOADER) ---
+        // --- AI ENGINE (GITHUB LOADER) ---
         async function startCamera() {
-            if(customModel) return;
-            try {
+            video = document.getElementById('webcam');
+            canvas = document.getElementById('ai-canvas');
+            ctx = canvas.getContext('2d');
+            if(!video.srcObject) {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 video.srcObject = stream;
-                reloadCustomModel();
-            } catch (e) { console.error("Kamera gagal:", e); }
+            }
+            if(!myModel) reloadModel();
         }
 
-        window.reloadCustomModel = async () => {
-            const url = document.getElementById('input-model-url').value;
-            document.getElementById('model-state').innerText = "LOADING MODEL...";
+        window.reloadModel = async () => {
+            const url = document.getElementById('model-url').value;
+            if(!url) return;
+            document.getElementById('ai-status-text').innerText = "MENYAMBUNGKAN GITHUB...";
             
             try {
-                // Memuat model kustom dari GitHub
-                // Catatan: Jika model anda bertipe 'Graph Model', gunakan loadGraphModel. 
-                // Jika 'Layers Model', gunakan loadLayersModel.
-                customModel = await tf.loadGraphModel(url);
-                
-                document.getElementById('model-state').innerText = "GITHUB MODEL ACTIVE";
-                document.getElementById('ai-status').className = 'status-dot online';
-                detect();
+                // Memuat model.json. Shards .bin akan dicari di path yang sama secara otomatis.
+                myModel = await tf.loadLayersModel(url);
+                document.getElementById('ai-status-text').innerText = "GITHUB MODEL AKTIF";
+                addLog("Model berhasil dimuat dari folder GitHub.");
+                detectLoop();
             } catch (e) {
-                document.getElementById('model-state').innerText = "LOAD ERROR (Cek URL)";
-                document.getElementById('ai-status').className = 'status-dot offline';
-                console.warn("Gagal memuat model kustom. Pastikan file model.json dan .bin dapat diakses secara publik di GitHub.");
+                document.getElementById('ai-status-text').innerText = "ERROR PATH / JSON";
+                addLog("Gagal: Pastikan model.json dan file .bin berada di folder yang sama.");
             }
         };
 
-        async function detect() {
-            if (!customModel) return;
-
-            // Proses Frame
+        async function detectLoop() {
+            if(!myModel) return;
+            
             const tfImg = tf.browser.fromPixels(video);
-            const smImg = tf.image.resizeBilinear(tfImg, [300, 300]).expandDims(0).toFloat().div(255.0);
+            const smImg = tf.image.resizeBilinear(tfImg, [224, 224]).toFloat().expandDims();
             
-            // Eksekusi Model
-            const result = await customModel.executeAsync(smImg);
+            // Prediksi menggunakan model GitHub Anda
+            const prediction = await myModel.predict(smImg).data();
             
-            // Membersihkan canvas
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Logika Menggambar (Asumsi output model kustom adalah Boxes & Scores)
-            // Ini biasanya memerlukan penyesuaian tergantung arsitektur model kustom Anda
-            // Contoh sederhana untuk mendemonstrasikan AI sedang aktif:
-            drawEvidence(100, 100, 200, 200, "OBJEK GITHUB");
+            // Visualisasi Bukti AI Aktif (Berdasarkan bobot model Anda)
+            if(prediction[0] > 0.5) {
+                ctx.strokeStyle = "#3b82f6";
+                ctx.lineWidth = 4;
+                ctx.strokeRect(50, 50, canvas.width - 100, canvas.height - 100);
+                
+                ctx.fillStyle = "#3b82f6";
+                ctx.fillRect(50, 20, 200, 30);
+                ctx.fillStyle = "white";
+                ctx.font = "bold 14px Outfit";
+                ctx.fillText("AI GITHUB TERDETEKSI", 65, 41);
+            }
 
             tfImg.dispose();
             smImg.dispose();
-            requestAnimationFrame(detect);
+            requestAnimationFrame(detectLoop);
         }
 
-        function drawEvidence(x, y, w, h, label) {
-            ctx.strokeStyle = "#3b82f6";
-            ctx.lineWidth = 4;
-            ctx.strokeRect(x, y, w, h);
-            
-            ctx.fillStyle = "#3b82f6";
-            ctx.fillRect(x, y - 25, 150, 25);
-            ctx.fillStyle = "white";
-            ctx.font = "bold 12px Outfit";
-            ctx.fillText(label + " - TERDETEKSI", x + 10, y - 8);
+        function addLog(msg) {
+            const logs = document.getElementById('ai-logs');
+            const time = new Date().toLocaleTimeString('id-ID');
+            const div = document.createElement('div');
+            div.className = "p-3 bg-white/60 rounded-xl border border-white mb-2 flex justify-between shadow-sm animate-in fade-in";
+            div.innerHTML = `<span class="font-bold text-blue-600">🛡️ ${msg}</span><span class="text-[9px] text-slate-400">${time}</span>`;
+            logs.prepend(div);
         }
 
-        // Jam Real-time
-        setInterval(() => {
-            document.getElementById('clock').innerText = new Date().toLocaleTimeString('id-ID');
-        }, 1000);
-
+        setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString('id-ID'), 1000);
         onValue(ref(db, ".info/connected"), (snap) => {
             document.getElementById('db-status').className = snap.val() ? 'status-dot online' : 'status-dot offline';
         });
