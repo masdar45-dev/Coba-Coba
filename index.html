@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexHome Masdar - AI Security & Scheduler</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+    <style>
+        :root { --blue: #3b82f6; --bg: #f8fafc; }
+        body { font-family: 'Outfit', sans-serif; background-color: var(--bg); color: #1e293b; overflow-x: hidden; }
+        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.5); }
+        .nav-btn.active { background: #3b82f6; color: white; box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3); }
+        .relay-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .relay-card.active { background: white; border-color: #3b82f6; transform: translateY(-4px); }
+        .hidden { display: none; }
+        #ai-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        .alert-pulse { animation: alert-flash 1s infinite; }
+        @keyframes alert-flash { 0% { background: #ef4444; } 50% { background: #b91c1c; } 100% { background: #ef4444; } }
+    </style>
+</head>
+<body class="pb-24">
+
+    <!-- Header & Navigation -->
+    <header class="p-6 max-w-6xl mx-auto flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <div class="p-3 bg-blue-600 rounded-2xl text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold">NexHome <span class="text-blue-600">Secure</span></h1>
+                <p id="clock" class="text-[10px] font-black text-blue-600 uppercase tracking-widest">00:00:00</p>
+            </div>
+        </div>
+        <div class="flex bg-white/50 p-1.5 rounded-2xl shadow-inner">
+            <button id="nav-home" onclick="switchTab('home')" class="nav-btn active px-4 py-2 rounded-xl text-xs font-bold transition-all">UTAMA</button>
+            <button id="nav-cctv" onclick="switchTab('cctv')" class="nav-btn px-4 py-2 rounded-xl text-xs font-bold transition-all">KEAMANAN</button>
+            <button id="nav-sched" onclick="switchTab('sched')" class="nav-btn px-4 py-2 rounded-xl text-xs font-bold transition-all">JADWAL</button>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6">
+        
+        <!-- SECTION: HOME (CONTROL & SENSOR) -->
+        <div id="tab-home" class="space-y-6">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass p-6 rounded-[2rem] flex justify-between items-center shadow-sm">
+                    <div>
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Suhu</p>
+                        <h2 id="temp" class="text-3xl font-bold text-slate-800">--°C</h2>
+                    </div>
+                    <span class="text-2xl">🌡️</span>
+                </div>
+                <div class="glass p-6 rounded-[2rem] flex justify-between items-center shadow-sm">
+                    <div>
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Lembab</p>
+                        <h2 id="hum" class="text-3xl font-bold text-slate-800">--%</h2>
+                    </div>
+                    <span class="text-2xl">💧</span>
+                </div>
+            </div>
+            <div id="relay-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- Relay Cards Injected Here -->
+            </div>
+        </div>
+
+        <!-- SECTION: SECURITY (AI CCTV) -->
+        <div id="tab-cctv" class="hidden space-y-6">
+            <div class="relative bg-black rounded-[2.5rem] overflow-hidden aspect-video shadow-2xl">
+                <video id="webcam" autoplay muted playsinline class="w-full h-full object-cover"></video>
+                <canvas id="ai-canvas"></canvas>
+                <div class="absolute top-4 left-4 flex gap-2">
+                    <div id="ai-indicator" class="bg-blue-600 text-white text-[9px] font-bold px-3 py-1 rounded-full flex items-center gap-2">
+                        <div class="w-1.5 h-1.5 bg-white rounded-full"></div> AI ACTIVE
+                    </div>
+                    <div id="motion-alert" class="hidden bg-red-600 text-white text-[9px] font-bold px-3 py-1 rounded-full animate-pulse">
+                        MANUSIA TERDETEKSI
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-2 glass p-6 rounded-[2rem]">
+                    <h3 class="font-bold text-sm mb-4 flex justify-between">
+                        Log Keamanan 
+                        <span class="text-[10px] text-slate-400 uppercase">Auto-Snapshot Aktif</span>
+                    </h3>
+                    <div id="security-logs" class="space-y-2 h-48 overflow-y-auto pr-2 text-[11px]">
+                        <!-- Security Logs Injected Here -->
+                    </div>
+                </div>
+                <div class="glass p-6 rounded-[2rem] space-y-4">
+                    <h3 class="font-bold text-sm">Bukti Foto Terakhir</h3>
+                    <div id="snapshot-preview" class="w-full aspect-video bg-slate-200 rounded-xl overflow-hidden flex items-center justify-center text-[10px] text-slate-400 italic">
+                        Belum ada tangkapan
+                    </div>
+                    <button onclick="captureNow()" class="w-full py-3 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all">AMBIL FOTO MANUAL</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION: SCHEDULER -->
+        <div id="tab-sched" class="hidden space-y-6">
+            <div class="glass p-8 rounded-[2.5rem]">
+                <h3 class="font-bold text-lg mb-6">Atur Penjadwalan Saklar</h3>
+                <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                    <div id="schedule-list" class="space-y-3">
+                        <!-- Scheduler Rows Injected Here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue, set, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCVY-tSDQvob6kYB8-ebLMNVb3Rge1mtx8",
+            authDomain: "smart-home-masdar.firebaseapp.com",
+            projectId: "smart-home-masdar",
+            databaseURL: "https://smart-home-masdar-default-rtdb.asia-southeast1.firebasedatabase.app/" 
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const basePath = "nexhome_v3";
+
+        let model, video, canvas, ctx;
+        let lastDetectionTime = 0;
+
+        // --- NAVIGATION LOGIC ---
+        window.switchTab = (tab) => {
+            ['home', 'cctv', 'sched'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                document.getElementById(`nav-${t}`).classList.remove('active');
+            });
+            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+            document.getElementById(`nav-${tab}`).classList.add('active');
+            if(tab === 'cctv') startSecurityAI();
+        };
+
+        // --- HOME & RELAY LOGIC ---
+        onValue(ref(db, basePath), (snapshot) => {
+            const data = snapshot.val() || {};
+            document.getElementById('temp').innerText = (data.sensors?.temperature || '--') + '°';
+            document.getElementById('hum').innerText = (data.sensors?.humidity || '--') + '%';
+            
+            // Render Relays
+            const grid = document.getElementById('relay-grid');
+            grid.innerHTML = '';
+            for(let i=1; i<=8; i++) {
+                const rid = `relay${i}`;
+                const isOn = data.states?.[rid] || false;
+                grid.innerHTML += `
+                    <div onclick="toggleRelay('${rid}', ${isOn})" class="relay-card glass p-5 rounded-[2rem] cursor-pointer ${isOn ? 'active' : ''}">
+                        <div class="w-10 h-10 rounded-xl mb-3 flex items-center justify-center ${isOn ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}">
+                            ${isOn ? '💡' : '🔌'}
+                        </div>
+                        <p class="text-[10px] font-bold text-slate-800">${data.names?.[rid] || 'Saklar '+i}</p>
+                        <p class="text-[9px] font-black uppercase mt-1 ${isOn ? 'text-blue-600' : 'text-slate-400'}">${isOn ? 'Aktif' : 'Mati'}</p>
+                    </div>`;
+            }
+
+            // Render Scheduler
+            const schedList = document.getElementById('schedule-list');
+            schedList.innerHTML = '';
+            for(let i=1; i<=8; i++) {
+                const rid = `relay${i}`;
+                const sched = data.schedules?.[rid] || { time: "00:00", active: false };
+                schedList.innerHTML += `
+                    <div class="flex items-center justify-between p-4 bg-white/50 rounded-2xl border border-white">
+                        <div class="flex items-center gap-4">
+                            <span class="text-xs font-bold w-20">${data.names?.[rid] || 'Saklar '+i}</span>
+                            <input type="time" value="${sched.time}" onchange="updateSched('${rid}', this.value)" class="bg-transparent border-none text-sm font-bold text-blue-600 outline-none">
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-[10px] font-bold text-slate-400">OTOMATIS</span>
+                            <input type="checkbox" ${sched.active ? 'checked' : ''} onchange="toggleSched('${rid}', ${sched.active})" class="w-4 h-4 accent-blue-600">
+                        </div>
+                    </div>`;
+            }
+        });
+
+        window.toggleRelay = (id, cur) => set(ref(db, `${basePath}/states/${id}`), !cur);
+        window.updateSched = (id, time) => set(ref(db, `${basePath}/schedules/${id}/time`), time);
+        window.toggleSched = (id, cur) => set(ref(db, `${basePath}/schedules/${id}/active`), !cur);
+
+        // --- SECURITY AI LOGIC (AUTO SCREENSHOT & NOTIF) ---
+        async function startSecurityAI() {
+            if(model) return;
+            video = document.getElementById('webcam');
+            canvas = document.getElementById('ai-canvas');
+            ctx = canvas.getContext('2d');
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                model = await cocoSsd.load();
+                detectFrame();
+            } catch (e) { addLog("Akses kamera ditolak."); }
+        }
+
+        async function detectFrame() {
+            const predictions = await model.detect(video);
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            let humanFound = false;
+            predictions.forEach(p => {
+                if(p.class === 'person' && p.score > 0.65) {
+                    humanFound = true;
+                    ctx.strokeStyle = '#ef4444';
+                    ctx.lineWidth = 4;
+                    ctx.strokeRect(...p.bbox);
+                    
+                    // Trigger Auto Logic jika sudah lewat 5 detik dari deteksi terakhir
+                    if(Date.now() - lastDetectionTime > 5000) {
+                        handleSecurityAlert();
+                        lastDetectionTime = Date.now();
+                    }
+                }
+            });
+
+            document.getElementById('motion-alert').classList.toggle('hidden', !humanFound);
+            requestAnimationFrame(detectFrame);
+        }
+
+        function handleSecurityAlert() {
+            // 1. Ambil Screenshot
+            const dataUrl = canvas.toDataURL('image/png');
+            document.getElementById('snapshot-preview').innerHTML = `<img src="${dataUrl}" class="w-full h-full object-cover animate-in fade-in">`;
+            
+            // 2. Kirim Notifikasi ke Firebase
+            const alertRef = ref(db, `${basePath}/security_alerts`);
+            push(alertRef, {
+                type: "MANUSIA_TERDETEKSI",
+                timestamp: serverTimestamp(),
+                message: "Seseorang terdeteksi oleh AI di area utama."
+            });
+
+            addLog("AI mendeteksi manusia - Screenshot diambil & Notifikasi dikirim!");
+        }
+
+        function addLog(msg) {
+            const container = document.getElementById('security-logs');
+            const time = new Date().toLocaleTimeString('id-ID');
+            const el = document.createElement('div');
+            el.className = "flex justify-between items-center p-3 bg-white/60 rounded-xl border border-white shadow-sm animate-in slide-in-from-left";
+            el.innerHTML = `<span class="font-medium text-slate-700">⚠️ ${msg}</span><span class="text-[9px] text-slate-400 font-mono">${time}</span>`;
+            container.prepend(el);
+            if(container.children.length > 30) container.lastChild.remove();
+        }
+
+        window.captureNow = () => handleSecurityAlert();
+
+        // Clock
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString('id-ID');
+        }, 1000);
+    </script>
+</body>
+</html>
+
