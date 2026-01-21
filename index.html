@@ -3,88 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NexHome Masdar - Smart Vision Home</title>
+    <title>NexHome Masdar - AI Vision Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
     <style>
-        body { font-family: 'Outfit', sans-serif; background: #0f172a; color: #f8fafc; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .active-glow { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); border-color: #3b82f6; }
-        #video-container { position: relative; border-radius: 2.5rem; overflow: hidden; border: 4px solid #334155; }
-        canvas { position: absolute; top: 0; left: 0; pointer-events: none; }
-        .nav-btn.active { background: #3b82f6; color: white; }
+        body { font-family: 'Outfit', sans-serif; background: #0b1120; color: #f8fafc; margin: 0; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        #camera-box { 
+            position: relative; 
+            width: 100%; 
+            max-width: 640px; 
+            margin: 0 auto; 
+            aspect-ratio: 4/3;
+            background: #000;
+            border-radius: 1.5rem;
+            box-shadow: 0 0 40px rgba(0,0,0,0.6);
+            overflow: hidden;
+            border: 2px solid #334155;
+        }
+        video { width: 100%; height: 100%; object-fit: cover; }
+        canvas { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100% !important; 
+            height: 100% !important; 
+            z-index: 100; 
+            pointer-events: none;
+        }
+        .tab-btn.active { background: #2563eb; color: white; border-color: #3b82f6; }
     </style>
 </head>
-<body class="pb-24">
+<body class="pb-10">
 
-    <header class="p-6 md:p-10 max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+    <header class="p-6 max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
         <div class="flex items-center gap-4">
-            <div class="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center shadow-2xl rotate-3">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+            <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/20">
+                <svg width="24" height="24" fill="white" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
             </div>
             <div>
-                <h1 class="text-2xl font-black tracking-tighter italic">NEXHOME <span class="text-blue-500">MASDAR</span></h1>
+                <h1 class="text-xl font-black tracking-tight uppercase">NexHome <span class="text-blue-500">Masdar</span></h1>
                 <div class="flex items-center gap-2">
-                    <div id="hw-status" class="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_red]"></div>
-                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Hardware Engine</p>
+                    <div id="hw-dot" class="w-2 h-2 rounded-full bg-red-500"></div>
+                    <span id="hw-txt" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Sinkronisasi...</span>
                 </div>
             </div>
         </div>
+
+        <!-- Sensor Section -->
         <div class="flex gap-4">
-            <div class="glass px-6 py-3 rounded-2xl text-center">
-                <p class="text-[9px] font-black text-slate-500 uppercase">Suhu</p>
-                <p id="temp" class="text-lg font-bold text-blue-400">--°</p>
+            <div class="glass p-3 rounded-2xl border-l-4 border-l-orange-500 min-w-[100px]">
+                <p class="text-[9px] font-bold text-slate-500 uppercase mb-1">🌡️ Suhu</p>
+                <p id="temp-val" class="text-xl font-black">--°C</p>
             </div>
-            <div class="glass px-6 py-3 rounded-2xl text-center">
-                <p class="text-[9px] font-black text-slate-500 uppercase">Lembab</p>
-                <p id="hum" class="text-lg font-bold text-blue-400">--%</p>
-            </div>
-            <div class="glass px-6 py-3 rounded-2xl border-blue-500/20 hidden md:block">
-                <p id="clock" class="text-lg font-black text-white">00:00:00</p>
+            <div class="glass p-3 rounded-2xl border-l-4 border-l-blue-500 min-w-[100px]">
+                <p class="text-[9px] font-bold text-slate-500 uppercase mb-1">💧 Lembab</p>
+                <p id="hum-val" class="text-xl font-black">--%</p>
             </div>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-6">
-        <div class="flex bg-slate-800/50 p-1.5 rounded-2xl w-fit mb-10 border border-slate-700">
-            <button onclick="setTab('control')" id="btn-control" class="nav-btn active px-8 py-3 rounded-xl text-xs font-black transition-all">KONTROL</button>
-            <button onclick="setTab('vision')" id="btn-vision" class="nav-btn px-8 py-3 rounded-xl text-xs font-black text-slate-400 transition-all">VISI AI</button>
-            <button onclick="setTab('settings')" id="btn-settings" class="nav-btn px-8 py-3 rounded-xl text-xs font-black text-slate-400 transition-all">SISTEM</button>
+    <main class="max-w-5xl mx-auto px-6">
+        <div class="flex bg-slate-900/60 p-1.5 rounded-2xl w-fit mb-8 border border-slate-800">
+            <button onclick="tab('ctrl')" id="btn-ctrl" class="tab-btn active px-8 py-2.5 rounded-xl text-[11px] font-black uppercase transition-all">Kontrol</button>
+            <button onclick="tab('vis')" id="btn-vis" class="tab-btn px-8 py-2.5 rounded-xl text-[11px] font-black uppercase text-slate-500 transition-all">AI Vision</button>
         </div>
 
-        <div id="tab-control" class="grid grid-cols-2 md:grid-cols-4 gap-4 animate-in fade-in duration-500">
-            </div>
+        <!-- Kontrol Tab -->
+        <div id="tab-ctrl" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
 
-        <div id="tab-vision" class="hidden space-y-6 animate-in zoom-in-95 duration-500">
-            <div id="video-container" class="aspect-video shadow-2xl bg-black">
-                <video id="webcam" autoplay muted playsinline class="w-full h-full object-cover opacity-80"></video>
-                <canvas id="overlay"></canvas>
-                
-                <div class="absolute top-8 left-8">
-                    <div id="ai-badge" class="glass px-5 py-2.5 rounded-full flex items-center gap-3 border-blue-500/30">
-                        <div class="w-2 h-2 bg-blue-500 rounded-full animate-ping"></div>
-                        <span id="ai-status" class="text-[10px] font-black uppercase tracking-[0.2em]">Menunggu Sinkronisasi...</span>
+        <!-- Vision Tab -->
+        <div id="tab-vis" class="hidden space-y-6">
+            <div id="camera-box">
+                <video id="webcam" autoplay muted playsinline></video>
+                <canvas id="canvas-overlay"></canvas>
+                <div class="absolute top-4 left-4 z-[110]">
+                    <div class="glass px-3 py-1.5 rounded-full flex items-center gap-2 border-blue-500/30">
+                        <div id="ai-indicator" class="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                        <span id="ai-status" class="text-[10px] font-black uppercase tracking-tight">AI Memuat...</span>
                     </div>
                 </div>
             </div>
-            <div class="glass p-6 rounded-[2rem]">
-                <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Log Deteksi Keamanan</h3>
-                <div id="ai-logs" class="space-y-2 h-32 overflow-y-auto text-[10px] font-medium text-slate-400 pr-4"></div>
-            </div>
-        </div>
-
-        <div id="tab-settings" class="hidden animate-in slide-in-from-bottom-10 duration-500">
-            <div class="glass p-10 rounded-[3rem] space-y-8">
-                <div class="bg-blue-600/10 p-8 rounded-3xl border border-blue-500/20">
-                    <h3 class="text-sm font-black text-blue-400 uppercase mb-4">Input Folder Model GitHub</h3>
-                    <input type="text" id="folder-url" placeholder="https://raw.githubusercontent.com/.../models/" 
-                           class="w-full bg-slate-900/50 p-5 rounded-2xl text-xs font-bold border border-slate-700 outline-none focus:border-blue-500 text-white mb-4">
-                    <button onclick="syncAI()" class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-2xl font-black text-xs transition-all shadow-xl">SINKRONKAN SEKARANG</button>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="glass p-5 rounded-2xl md:col-span-2">
+                    <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Log Analitik</h3>
+                    <div id="vision-logs" class="text-[10px] font-mono text-slate-400 h-20 overflow-y-auto space-y-1"></div>
                 </div>
-                <div id="naming-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4"></div>
+                <div class="glass p-5 rounded-2xl flex flex-col items-center justify-center text-center">
+                    <p class="text-[10px] font-black text-slate-500 uppercase mb-1">Kecepatan AI</p>
+                    <p id="fps-meter" class="text-3xl font-black text-blue-500">0</p>
+                    <p class="text-[8px] font-bold text-slate-600 uppercase">Frames/Sec</p>
+                </div>
             </div>
         </div>
     </main>
@@ -93,162 +104,171 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // --- FIREBASE CONFIG ---
-        const firebaseConfig = {
+        // URL GitHub Models (Ditambahkan Timestamp untuk menghindari cache lama)
+        const MODEL_PATH = "https://raw.githubusercontent.com/masdar45-dev/Coba-Coba/refs/heads/main/models/";
+
+        const fbConfig = {
             apiKey: "AIzaSyCVY-tSDQvob6kYB8-ebLMNVb3Rge1mtx8",
             authDomain: "smart-home-masdar.firebaseapp.com",
             projectId: "smart-home-masdar",
             databaseURL: "https://smart-home-masdar-default-rtdb.asia-southeast1.firebasedatabase.app/" 
         };
 
-        const app = initializeApp(firebaseConfig);
+        const app = initializeApp(fbConfig);
         const db = getDatabase(app);
-        const root = "nexhome_v3";
+        const rootPath = "nexhome_v3";
 
-        let video, canvas, ctx, isAIRready = false;
+        let video = document.getElementById('webcam');
+        let canvas = document.getElementById('canvas-overlay');
+        let ctx = canvas.getContext('2d');
+        let aiReady = false;
+        let activeTab = 'ctrl';
+        let lastFrameTime = 0;
 
-        // --- NAVIGATION ---
-        window.setTab = (tab) => {
-            ['control', 'vision', 'settings'].forEach(t => {
-                document.getElementById(`tab-${t}`).classList.add('hidden');
-                document.getElementById(`btn-${t}`).classList.remove('active');
-            });
-            document.getElementById(`tab-${tab}`).classList.remove('hidden');
-            document.getElementById(`btn-${tab}`).classList.add('active');
-            if(tab === 'vision') initCamera();
+        // TAB SWITCHER
+        window.tab = (t) => {
+            activeTab = t;
+            document.getElementById('tab-ctrl').classList.toggle('hidden', t !== 'ctrl');
+            document.getElementById('tab-vis').classList.toggle('hidden', t !== 'vis');
+            document.getElementById('btn-ctrl').className = t === 'ctrl' ? 'tab-btn active px-8 py-2.5 rounded-xl text-[11px] font-black uppercase' : 'tab-btn px-8 py-2.5 rounded-xl text-[11px] font-black uppercase text-slate-500';
+            document.getElementById('btn-vis').className = t === 'vis' ? 'tab-btn active px-8 py-2.5 rounded-xl text-[11px] font-black uppercase' : 'tab-btn px-8 py-2.5 rounded-xl text-[11px] font-black uppercase text-slate-500';
+            
+            if(t === 'vis') initVision();
         };
 
-        // --- FIREBASE SYNC (SMART HOME) ---
-        onValue(ref(db, root), (snap) => {
+        // FIREBASE HANDLER
+        onValue(ref(db, rootPath), (snap) => {
             const data = snap.val() || {};
-            const isOnline = (Date.now() - (data.last_online || 0)) < 15000;
-            document.getElementById('hw-status').className = `w-2 h-2 rounded-full ${isOnline ? 'bg-green-500 shadow-[0_0_8px_#10b981]' : 'bg-red-500 shadow-[0_0_8px_red]'}`;
             
-            document.getElementById('temp').innerText = (data.sensors?.temperature || '--') + '°';
-            document.getElementById('hum').innerText = (data.sensors?.humidity || '--') + '%';
+            // Sensor Suhu & Lembab
+            document.getElementById('temp-val').innerText = (data.sensors?.temperature || '--') + '°C';
+            document.getElementById('hum-val').innerText = (data.sensors?.humidity || '--') + '%';
 
-            const controlGrid = document.getElementById('tab-control');
-            const nameGrid = document.getElementById('naming-grid');
-            controlGrid.innerHTML = ''; nameGrid.innerHTML = '';
+            // HW Status
+            const isOnline = (Date.now() - (data.last_online || 0)) < 15000;
+            document.getElementById('hw-dot').className = `w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`;
+            document.getElementById('hw-txt').innerText = isOnline ? 'Tersambung' : 'Terputus';
 
+            // Relay Buttons
+            const ctrlContainer = document.getElementById('tab-ctrl');
+            ctrlContainer.innerHTML = '';
             for(let i=1; i<=8; i++) {
                 const id = `relay${i}`;
-                const st = data.states?.[id] || false;
-                const nm = data.names?.[id] || `Switch ${i}`;
-
-                controlGrid.innerHTML += `
-                    <div onclick="toggleRelay('${id}', ${st})" class="glass p-8 rounded-[2.5rem] cursor-pointer transition-all ${st ? 'active-glow bg-slate-800' : ''}">
-                        <div class="w-12 h-12 rounded-2xl mb-4 flex items-center justify-center ${st ? 'bg-blue-600' : 'bg-slate-700 text-slate-500'}">
-                            ${st ? '💡' : '🔌'}
+                const state = data.states?.[id] || false;
+                const label = data.names?.[id] || `Saklar ${i}`;
+                ctrlContainer.innerHTML += `
+                    <div onclick="toggleSwitch('${id}', ${state})" class="glass p-6 rounded-3xl cursor-pointer transition-all active:scale-95 ${state ? 'border-blue-500 shadow-[0_0_20px_rgba(37,99,235,0.2)]' : ''}">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-2xl">${state ? '💡' : '🔌'}</span>
+                            <div class="w-1.5 h-1.5 rounded-full ${state ? 'bg-blue-500 animate-pulse' : 'bg-slate-700'}"></div>
                         </div>
-                        <p class="text-xs font-black text-white truncate uppercase">${nm}</p>
-                        <p class="text-[9px] font-bold mt-2 ${st ? 'text-blue-400' : 'text-slate-500'} tracking-widest uppercase">${st ? 'Active' : 'Offline'}</p>
-                    </div>`;
-
-                nameGrid.innerHTML += `
-                    <div class="flex items-center gap-4 bg-slate-900/50 p-4 rounded-2xl border border-slate-800">
-                        <span class="text-[10px] font-black text-blue-500 uppercase">S.${i}</span>
-                        <input type="text" value="${nm}" onchange="updateName('${id}', this.value)" class="bg-transparent text-xs font-bold text-slate-300 outline-none w-full">
-                    </div>`;
+                        <p class="text-[11px] font-black text-white uppercase truncate">${label}</p>
+                        <p class="text-[9px] font-bold ${state ? 'text-blue-400' : 'text-slate-500'} mt-1 uppercase">${state ? 'Aktif' : 'Mati'}</p>
+                    </div>
+                `;
             }
         });
 
-        window.toggleRelay = (id, cur) => set(ref(db, `${root}/states/${id}`), !cur);
-        window.updateName = (id, val) => set(ref(db, `${root}/names/${id}`), val);
+        window.toggleSwitch = (id, cur) => set(ref(db, `${rootPath}/states/${id}`), !cur);
 
-        // --- VISION AI CORE ---
-        async function initCamera() {
-            video = document.getElementById('webcam');
-            canvas = document.getElementById('overlay');
-            ctx = canvas.getContext('2d');
+        // VISION ENGINE
+        async function initVision() {
             if(!video.srcObject) {
-                const s = await navigator.mediaDevices.getUserMedia({ video: true });
-                video.srcObject = s;
+                try {
+                    addLog("Mengaktifkan Kamera...");
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { width: 640, height: 480, facingMode: "user" } 
+                    });
+                    video.srcObject = stream;
+                    await loadModels();
+                } catch(e) {
+                    addLog("Kamera Gagal Akses.");
+                }
             }
         }
 
-        window.syncAI = async () => {
-            let url = document.getElementById('folder-url').value.trim();
-            if(!url) return;
-            if(!url.endsWith('/')) url += '/';
-
-            document.getElementById('ai-status').innerText = "MENYAMBUNGKAN...";
-            
+        async function loadModels() {
             try {
-                // Memuat semua model Masdar (Recognition, Age, Expression)
-                await faceapi.nets.ssdMobilenetv1.loadFromUri(url);
-                await faceapi.nets.faceLandmark68TinyNet.loadFromUri(url);
-                await faceapi.nets.faceRecognitionNet.loadFromUri(url);
-                await faceapi.nets.faceExpressionNet.loadFromUri(url);
-                await faceapi.nets.ageGenderNet.loadFromUri(url);
-
-                isAIRready = true;
-                document.getElementById('ai-status').innerText = "VISION ONLINE";
-                addLog("Semua modul kecerdasan wajah aktif.");
-                detectLoop();
+                addLog("Mengunduh otak AI dari GitHub...");
+                // Menggunakan TinyFaceDetector agar lebih ringan untuk koneksi internet
+                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_PATH);
+                await faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_PATH);
+                await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_PATH);
+                await faceapi.nets.ageGenderNet.loadFromUri(MODEL_PATH);
+                
+                aiReady = true;
+                document.getElementById('ai-indicator').classList.replace('bg-red-500', 'bg-green-500');
+                document.getElementById('ai-status').innerText = "AI ONLINE";
+                addLog("AI Berhasil Dimuat.");
+                processFrame();
             } catch(e) {
-                document.getElementById('ai-status').innerText = "LINK SALAH (404)";
-                addLog("Gagal memuat model. Cek link Raw folder GitHub.");
+                console.error(e);
+                addLog("Gagal Memuat Model AI.");
             }
-        };
+        }
 
-        async function detectLoop() {
-            if(!isAIRready) return;
+        async function processFrame() {
+            if(!aiReady || activeTab !== 'vis') return;
 
-            const results = await faceapi.detectAllFaces(video)
+            // Update FPS
+            const now = performance.now();
+            const fps = Math.round(1000 / (now - lastFrameTime));
+            lastFrameTime = now;
+            document.getElementById('fps-meter').innerText = fps;
+
+            // Paksa Canvas mengikuti ukuran Tampilan Video (Penting untuk Label)
+            canvas.width = video.clientWidth;
+            canvas.height = video.clientHeight;
+
+            const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }))
                 .withFaceLandmarks(true)
                 .withFaceExpressions()
                 .withAgeAndGender();
 
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+            const resizedResults = faceapi.resizeResults(detections, { width: canvas.width, height: canvas.height });
+            
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            const displaySize = { width: video.videoWidth, height: video.videoHeight };
-            const resized = faceapi.resizeResults(results, displaySize);
+            if(resizedResults.length > 0) {
+                resizedResults.forEach(result => {
+                    const { detection, age, gender, expressions } = result;
+                    const box = detection.box;
 
-            resized.forEach(result => {
-                const { detection, age, gender, expressions } = result;
-                
-                // Pilih ekspresi terkuat
-                const topExp = Object.keys(expressions).reduce((a, b) => expressions[a] > expressions[b] ? a : b);
-                const genderID = gender === 'male' ? 'PRIA' : 'WANITA';
-                
-                // 1. Gambar Kotak Deteksi
-                ctx.strokeStyle = "#3b82f6";
-                ctx.lineWidth = 4;
-                ctx.strokeRect(detection.box.x, detection.box.y, detection.box.width, detection.box.height);
+                    // 1. Gambar Kotak (Futuristik)
+                    ctx.strokeStyle = '#2563eb';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(box.x, box.y, box.width, box.height);
 
-                // 2. Gambar Background Label
-                ctx.fillStyle = "#3b82f6";
-                const labelY = detection.box.y - 10;
-                ctx.fillRect(detection.box.x, labelY - 30, detection.box.width, 30);
+                    // 2. Olah Label
+                    const topExp = Object.keys(expressions).reduce((a, b) => expressions[a] > expressions[b] ? a : b);
+                    const genderIndo = gender === 'male' ? 'PRIA' : 'WANITA';
+                    const labelText = `${genderIndo} | ${Math.round(age)}TH | ${topExp.toUpperCase()}`;
 
-                // 3. Tulis Teks Label (Gender, Usia, Ekspresi)
-                ctx.fillStyle = "white";
-                ctx.font = "bold 12px Outfit";
-                ctx.fillText(`${genderID}, ${Math.round(age)}th (${topExp.toUpperCase()})`, detection.box.x + 10, labelY - 10);
-            });
+                    // 3. Gambar Background Label
+                    ctx.font = '900 12px Outfit';
+                    const textWidth = ctx.measureText(labelText).width;
+                    
+                    ctx.fillStyle = '#2563eb';
+                    ctx.fillRect(box.x, box.y - 30, textWidth + 20, 30);
 
-            if(results.length > 0 && Math.random() > 0.99) {
-                addLog(`Terdeteksi ${results.length} objek di area pantau.`);
+                    // 4. Gambar Teks
+                    ctx.fillStyle = 'white';
+                    ctx.fillText(labelText, box.x + 10, box.y - 10);
+                });
             }
 
-            requestAnimationFrame(detectLoop);
+            requestAnimationFrame(processFrame);
         }
 
         function addLog(m) {
-            const logs = document.getElementById('ai-logs');
+            const logs = document.getElementById('vision-logs');
             const d = document.createElement('div');
-            d.innerHTML = `<span class="text-blue-500 font-black">></span> ${m} <span class="float-right opacity-30 text-[8px]">${new Date().toLocaleTimeString()}</span>`;
+            d.innerHTML = `<span class="text-blue-500 mr-2">●</span> ${m}`;
             logs.prepend(d);
+            if(logs.children.length > 6) logs.lastChild.remove();
         }
 
-        setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString('id-ID'), 1000);
-        window.onload = () => {
-            initCamera();
-            setTab('control');
-        };
+        window.onload = () => tab('ctrl');
     </script>
 </body>
 </html>
