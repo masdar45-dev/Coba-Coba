@@ -1,6 +1,6 @@
 {
 "format": "layers-model",
-"generatedBy": "NexHome Masdar Converter",
+"generatedBy": "NexHome Masdar System",
 "convertedBy": "TensorFlow.js Converter v4.15.0",
 "modelTopology": {
 "class_name": "Sequential",
@@ -8,19 +8,19 @@
 "layers": [
 {
 "class_name": "Conv2D",
-"config": { "filters": 32, "kernel_size": [3, 3], "activation": "relu", "input_shape": [224, 224, 3] }
+"config": {
+"filters": 32,
+"kernel_size": [3, 3],
+"activation": "relu",
+"input_shape": [150, 150, 3]
+}
 }
 ]
 }
 },
 "weightsManifest": [
 {
-"paths": [
-"group1-shard1of1.bin",
-"group1-shard2of1.bin",
-"group1-shard3of1.bin",
-"group1-shard4of1.bin"
-],
+"paths": ["face_recognition_model.bin"],
 "weights": []
 }
 ]
