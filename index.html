@@ -3,98 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NexHome Masdar - AI Vision Pro</title>
+    <title>NexHome Masdar - Smart Security v4.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;900&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
     <style>
-        body { font-family: 'Outfit', sans-serif; background: #0b1120; color: #f8fafc; margin: 0; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        #camera-box { 
-            position: relative; 
-            width: 100%; 
-            max-width: 640px; 
-            margin: 0 auto; 
-            aspect-ratio: 4/3;
-            background: #000;
-            border-radius: 1.5rem;
-            box-shadow: 0 0 40px rgba(0,0,0,0.6);
-            overflow: hidden;
-            border: 2px solid #334155;
-        }
-        video { width: 100%; height: 100%; object-fit: cover; }
-        canvas { 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            width: 100% !important; 
-            height: 100% !important; 
-            z-index: 100; 
-            pointer-events: none;
-        }
-        .tab-btn.active { background: #2563eb; color: white; border-color: #3b82f6; }
+        body { font-family: 'Outfit', sans-serif; background: #070a13; color: #f8fafc; margin: 0; overflow-x: hidden; }
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .cctv-card { position: relative; border-radius: 1.5rem; overflow: hidden; border: 2px solid #1e293b; background: #000; transition: all 0.3s; }
+        .active-motion { border-color: #ef4444 !important; box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
+        video, .snapshot-img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
+        .tab-btn { transition: all 0.3s; border-bottom: 3px solid transparent; cursor: pointer; }
+        .tab-btn.active { border-color: #3b82f6; color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+        .alert-banner { transform: translateY(-120%); transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 9999; }
+        .alert-banner.show { transform: translateY(0); }
+        .device-card { transition: all 0.3s; cursor: pointer; position: relative; }
+        .device-card.on { background: rgba(59, 130, 246, 0.15); border: 1px solid #3b82f6; }
+        .delete-btn { position: absolute; bottom: 12px; right: 12px; z-index: 100; background: #ef4444; color: white; padding: 4px 12px; border-radius: 8px; font-size: 10px; font-weight: 900; text-transform: uppercase; cursor: pointer; border: none; }
+        .delete-btn:hover { background: #dc2626; transform: scale(1.05); }
     </style>
 </head>
-<body class="pb-10">
+<body class="pb-24">
 
-    <header class="p-6 max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+    <!-- Notifikasi Alert Global -->
+    <div id="global-alert" class="alert-banner fixed top-0 inset-x-0 p-4 pointer-events-none">
+        <div class="max-w-xl mx-auto bg-red-600 text-white p-5 rounded-3xl shadow-[0_20px_50px_rgba(239,68,68,0.3)] flex items-center justify-between border-2 border-white/20 pointer-events-auto">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-2xl animate-bounce">🚨</div>
+                <div>
+                    <p id="alert-title" class="font-black text-sm uppercase tracking-tighter">Gerakan Terdeteksi!</p>
+                    <p id="alert-subtitle" class="text-[10px] opacity-90 font-bold uppercase tracking-widest">Kamera: --</p>
+                </div>
+            </div>
+            <button onclick="window.hideAlert()" class="text-[10px] font-black bg-black/20 hover:bg-black/40 px-4 py-2 rounded-xl border border-white/10 transition-colors">TUTUP</button>
+        </div>
+    </div>
+
+    <header class="p-6 max-w-6xl mx-auto flex justify-between items-center relative z-20">
         <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/20">
-                <svg width="24" height="24" fill="white" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
+            <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-900/20">
+                <svg width="24" height="24" fill="white" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
             </div>
             <div>
-                <h1 class="text-xl font-black tracking-tight uppercase">NexHome <span class="text-blue-500">Masdar</span></h1>
-                <div class="flex items-center gap-2">
-                    <div id="hw-dot" class="w-2 h-2 rounded-full bg-red-500"></div>
-                    <span id="hw-txt" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Sinkronisasi...</span>
+                <h1 class="text-xl font-black tracking-tighter uppercase leading-none">NexHome <span class="text-blue-500 italic">v4.2</span></h1>
+                <p id="mode-display" class="text-[9px] font-bold text-slate-500 uppercase mt-1 tracking-widest">Inisialisasi Sistem...</p>
+            </div>
+        </div>
+        <button id="btn-back-home" class="hidden glass px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase text-blue-400 border border-blue-500/20 hover:bg-blue-500/10" onclick="window.goHome()">
+            ↺ RESET MODE
+        </button>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6">
+        
+        <!-- Screen 1: Pemilihan Mode -->
+        <div id="setup-screen" class="grid grid-cols-1 md:grid-cols-2 gap-8 py-12">
+            <div class="glass p-10 rounded-[2.5rem] border-2 border-transparent hover:border-blue-500 transition-all cursor-pointer group" onclick="window.initMode('cctv')">
+                <div class="w-16 h-16 bg-blue-600/20 rounded-3xl flex items-center justify-center text-4xl mb-6 group-hover:scale-110 transition-transform">🎥</div>
+                <h2 class="text-xl font-black uppercase mb-2">Pasang CCTV</h2>
+                <p class="text-xs text-slate-400 mb-8 leading-relaxed">Jadikan HP/Perangkat ini sebagai kamera pengawas cerdas dengan deteksi gerakan.</p>
+                <input id="camera-name" type="text" placeholder="Contoh: Teras Depan" class="w-full bg-slate-900/50 border border-slate-800 rounded-2xl px-5 py-4 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors" onclick="event.stopPropagation()">
+            </div>
+
+            <div class="glass p-10 rounded-[2.5rem] border-2 border-transparent hover:border-green-500 transition-all cursor-pointer group" onclick="window.initMode('monitor')">
+                <div class="w-16 h-16 bg-green-600/20 rounded-3xl flex items-center justify-center text-4xl mb-6 group-hover:scale-110 transition-transform">📱</div>
+                <h2 class="text-xl font-black uppercase mb-2">Panel Monitor</h2>
+                <p class="text-xs text-slate-400 mb-8 leading-relaxed">Pantau semua aliran CCTV, riwayat gerakan, dan kendalikan peralatan rumah tangga.</p>
+                <div class="flex items-center gap-2 text-green-500 text-[10px] font-black uppercase tracking-widest">
+                    Masuk Dashboard <span class="group-hover:translate-x-2 transition-transform">→</span>
                 </div>
             </div>
         </div>
 
-        <!-- Sensor Section -->
-        <div class="flex gap-4">
-            <div class="glass p-3 rounded-2xl border-l-4 border-l-orange-500 min-w-[100px]">
-                <p class="text-[9px] font-bold text-slate-500 uppercase mb-1">🌡️ Suhu</p>
-                <p id="temp-val" class="text-xl font-black">--°C</p>
+        <!-- Dashboard Konten -->
+        <div id="workspace" class="hidden">
+            <!-- Navigasi Tab (Monitor Only) -->
+            <div id="monitor-nav" class="flex gap-4 mb-10 overflow-x-auto pb-2">
+                <button id="tab-cctv-btn" onclick="window.switchTab('cctv')" class="tab-btn active whitespace-nowrap px-8 py-3 rounded-2xl text-[10px] font-black uppercase">CCTV & Keamanan</button>
+                <button id="tab-home-btn" onclick="window.switchTab('smarthome')" class="tab-btn whitespace-nowrap px-8 py-3 rounded-2xl text-[10px] font-black uppercase">Smart Home</button>
             </div>
-            <div class="glass p-3 rounded-2xl border-l-4 border-l-blue-500 min-w-[100px]">
-                <p class="text-[9px] font-bold text-slate-500 uppercase mb-1">💧 Lembab</p>
-                <p id="hum-val" class="text-xl font-black">--%</p>
-            </div>
-        </div>
-    </header>
 
-    <main class="max-w-5xl mx-auto px-6">
-        <div class="flex bg-slate-900/60 p-1.5 rounded-2xl w-fit mb-8 border border-slate-800">
-            <button onclick="tab('ctrl')" id="btn-ctrl" class="tab-btn active px-8 py-2.5 rounded-xl text-[11px] font-black uppercase transition-all">Kontrol</button>
-            <button onclick="tab('vis')" id="btn-vis" class="tab-btn px-8 py-2.5 rounded-xl text-[11px] font-black uppercase text-slate-500 transition-all">AI Vision</button>
-        </div>
+            <!-- View 1: CCTV -->
+            <div id="view-cctv" class="space-y-8">
+                <div id="monitor-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- CCTV Monitor Grid diisi via JS -->
+                </div>
 
-        <!-- Kontrol Tab -->
-        <div id="tab-ctrl" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+                <!-- Preview Kamera Lokal (Mode CCTV) -->
+                <div id="cctv-local-area" class="hidden">
+                    <div class="cctv-card max-w-2xl mx-auto shadow-2xl border-4 border-blue-600/30" id="local-cctv-card">
+                        <video id="webcam" autoplay muted playsinline class="rounded-xl"></video>
+                        <div class="absolute top-6 left-6 flex items-center gap-3">
+                            <div class="w-3 h-3 bg-red-600 rounded-full animate-ping"></div>
+                            <span class="bg-red-600 text-white text-[9px] font-black px-3 py-1 rounded-full uppercase">LIVE TRANSMITTING</span>
+                        </div>
+                        <div class="absolute bottom-6 left-6 bg-black/60 backdrop-blur px-4 py-2 rounded-xl border border-white/10">
+                            <p id="cam-id-display" class="text-[10px] font-black uppercase text-blue-400">ID: --</p>
+                        </div>
+                    </div>
+                </div>
 
-        <!-- Vision Tab -->
-        <div id="tab-vis" class="hidden space-y-6">
-            <div id="camera-box">
-                <video id="webcam" autoplay muted playsinline></video>
-                <canvas id="canvas-overlay"></canvas>
-                <div class="absolute top-4 left-4 z-[110]">
-                    <div class="glass px-3 py-1.5 rounded-full flex items-center gap-2 border-blue-500/30">
-                        <div id="ai-indicator" class="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
-                        <span id="ai-status" class="text-[10px] font-black uppercase tracking-tight">AI Memuat...</span>
+                <!-- Log Keamanan -->
+                <div class="glass p-8 rounded-[2rem] border border-white/5 shadow-inner">
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">📜</span>
+                            <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Log Aktivitas</h3>
+                        </div>
+                        <button onclick="window.clearAllSecurityData()" class="text-[10px] font-black text-red-500 hover:text-red-400 bg-red-500/10 px-4 py-2 rounded-xl transition-all uppercase">Bersihkan Log</button>
+                    </div>
+                    <div id="security-logs" class="space-y-3 max-h-60 overflow-y-auto pr-4 custom-scrollbar text-xs">
+                        <p class="text-slate-600 italic py-4 text-center">Menunggu aktivitas sistem...</p>
                     </div>
                 </div>
             </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="glass p-5 rounded-2xl md:col-span-2">
-                    <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Log Analitik</h3>
-                    <div id="vision-logs" class="text-[10px] font-mono text-slate-400 h-20 overflow-y-auto space-y-1"></div>
+
+            <!-- View 2: Smart Home -->
+            <div id="view-smarthome" class="hidden space-y-8">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div class="glass p-8 rounded-[2rem] flex items-center justify-between group hover:bg-blue-600/5 transition-all">
+                        <div>
+                            <p class="text-[10px] font-black text-slate-500 uppercase mb-2">Suhu Ruangan</p>
+                            <h4 id="temp-val" class="text-4xl font-black text-blue-400 tracking-tighter">24°C</h4>
+                        </div>
+                        <span class="text-4xl opacity-20 group-hover:opacity-100 transition-opacity">🌡️</span>
+                    </div>
+                    <div class="glass p-8 rounded-[2rem] flex items-center justify-between group hover:bg-green-600/5 transition-all">
+                        <div>
+                            <p class="text-[10px] font-black text-slate-500 uppercase mb-2">Kelembapan</p>
+                            <h4 id="hum-val" class="text-4xl font-black text-green-400 tracking-tighter">60%</h4>
+                        </div>
+                        <span class="text-4xl opacity-20 group-hover:opacity-100 transition-opacity">💧</span>
+                    </div>
                 </div>
-                <div class="glass p-5 rounded-2xl flex flex-col items-center justify-center text-center">
-                    <p class="text-[10px] font-black text-slate-500 uppercase mb-1">Kecepatan AI</p>
-                    <p id="fps-meter" class="text-3xl font-black text-blue-500">0</p>
-                    <p class="text-[8px] font-bold text-slate-600 uppercase">Frames/Sec</p>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div id="card-lampu" class="device-card glass p-8 rounded-[2.5rem]" onclick="window.toggleDevice('lampu')">
+                        <div class="w-14 h-14 bg-slate-800 rounded-2xl flex items-center justify-center text-3xl mb-4 transition-all icon-box">💡</div>
+                        <h5 class="text-xs font-black uppercase">Lampu Utama</h5>
+                        <p id="status-lampu" class="text-[9px] font-bold text-slate-500 mt-2 uppercase tracking-widest">OFF</p>
+                    </div>
+                    <div id="card-ac" class="device-card glass p-8 rounded-[2.5rem]" onclick="window.toggleDevice('ac')">
+                        <div class="w-14 h-14 bg-slate-800 rounded-2xl flex items-center justify-center text-3xl mb-4 transition-all icon-box">❄️</div>
+                        <h5 class="text-xs font-black uppercase">Pendingin AC</h5>
+                        <p id="status-ac" class="text-[9px] font-bold text-slate-500 mt-2 uppercase tracking-widest">OFF</p>
+                    </div>
+                    <div id="card-pintu" class="device-card glass p-8 rounded-[2.5rem]" onclick="window.toggleDevice('pintu')">
+                        <div id="icon-pintu-box" class="w-14 h-14 bg-slate-800 rounded-2xl flex items-center justify-center text-3xl mb-4 transition-all icon-box">🔒</div>
+                        <h5 class="text-xs font-black uppercase">Kunci Pintu</h5>
+                        <p id="status-pintu" class="text-[9px] font-bold text-slate-500 mt-2 uppercase tracking-widest">LOCKED</p>
+                    </div>
+                    <div id="card-kipas" class="device-card glass p-8 rounded-[2.5rem]" onclick="window.toggleDevice('kipas')">
+                        <div class="w-14 h-14 bg-slate-800 rounded-2xl flex items-center justify-center text-3xl mb-4 transition-all icon-box">🌀</div>
+                        <h5 class="text-xs font-black uppercase">Kipas Angin</h5>
+                        <p id="status-kipas" class="text-[9px] font-bold text-slate-500 mt-2 uppercase tracking-widest">OFF</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -102,173 +164,275 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, set, update, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // URL GitHub Models (Ditambahkan Timestamp untuk menghindari cache lama)
-        const MODEL_PATH = "https://raw.githubusercontent.com/masdar45-dev/Coba-Coba/refs/heads/main/models/";
-
-        const fbConfig = {
+        const firebaseConfig = {
             apiKey: "AIzaSyCVY-tSDQvob6kYB8-ebLMNVb3Rge1mtx8",
-            authDomain: "smart-home-masdar.firebaseapp.com",
-            projectId: "smart-home-masdar",
             databaseURL: "https://smart-home-masdar-default-rtdb.asia-southeast1.firebasedatabase.app/" 
         };
 
-        const app = initializeApp(fbConfig);
+        const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const rootPath = "nexhome_v3";
+        const secPath = "nexhome_v3/security";
+        const homePath = "nexhome_v3/home";
 
-        let video = document.getElementById('webcam');
-        let canvas = document.getElementById('canvas-overlay');
-        let ctx = canvas.getContext('2d');
-        let aiReady = false;
-        let activeTab = 'ctrl';
-        let lastFrameTime = 0;
+        let currentMode = null;
+        let myCamName = "";
+        let stream = null;
+        let prevImgData = null;
+        let lastCaptured = 0;
+        let alertTimeout = null;
 
-        // TAB SWITCHER
-        window.tab = (t) => {
-            activeTab = t;
-            document.getElementById('tab-ctrl').classList.toggle('hidden', t !== 'ctrl');
-            document.getElementById('tab-vis').classList.toggle('hidden', t !== 'vis');
-            document.getElementById('btn-ctrl').className = t === 'ctrl' ? 'tab-btn active px-8 py-2.5 rounded-xl text-[11px] font-black uppercase' : 'tab-btn px-8 py-2.5 rounded-xl text-[11px] font-black uppercase text-slate-500';
-            document.getElementById('btn-vis').className = t === 'vis' ? 'tab-btn active px-8 py-2.5 rounded-xl text-[11px] font-black uppercase' : 'tab-btn px-8 py-2.5 rounded-xl text-[11px] font-black uppercase text-slate-500';
-            
-            if(t === 'vis') initVision();
+        // --- GLOBAL EXPOSURE ---
+        window.initMode = (mode) => {
+            currentMode = mode;
+            document.getElementById('setup-screen').style.display = 'none';
+            document.getElementById('workspace').classList.remove('hidden');
+            document.getElementById('btn-back-home').classList.remove('hidden');
+
+            if(mode === 'cctv') {
+                const nameInp = document.getElementById('camera-name').value.trim();
+                myCamName = nameInp ? nameInp.replace(/\s+/g, '_') : "Cam_" + Math.floor(Math.random()*999);
+                document.getElementById('monitor-nav').classList.add('hidden');
+                document.getElementById('cctv-local-area').classList.remove('hidden');
+                document.getElementById('monitor-grid').classList.add('hidden');
+                document.getElementById('cam-id-display').innerText = "Kamera: " + myCamName;
+                document.getElementById('mode-display').innerText = "MODE CCTV AKTIF";
+                startCCTV();
+            } else {
+                myCamName = "Master_Monitor";
+                document.getElementById('monitor-nav').classList.remove('hidden');
+                document.getElementById('monitor-grid').classList.remove('hidden');
+                document.getElementById('mode-display').innerText = "MODE MONITOR AKTIF";
+            }
+            startSync();
         };
 
-        // FIREBASE HANDLER
-        onValue(ref(db, rootPath), (snap) => {
-            const data = snap.val() || {};
+        window.goHome = () => {
+            if(stream) stream.getTracks().forEach(track => track.stop());
+            location.reload(); 
+        };
+
+        window.switchTab = (target) => {
+            document.getElementById('view-cctv').classList.toggle('hidden', target !== 'cctv');
+            document.getElementById('view-smarthome').classList.toggle('hidden', target !== 'smarthome');
+            document.getElementById('tab-cctv-btn').classList.toggle('active', target === 'cctv');
+            document.getElementById('tab-home-btn').classList.toggle('active', target === 'smarthome');
+        };
+
+        window.hideAlert = () => {
+            document.getElementById('global-alert').classList.remove('show');
+            if(alertTimeout) clearTimeout(alertTimeout);
+        };
+
+        // --- DATABASE SYNC ---
+        function startSync() {
+            if(currentMode === 'cctv') {
+                set(ref(db, `${secPath}/nodes/${myCamName}/status`), "online");
+                onDisconnect(ref(db, `${secPath}/nodes/${myCamName}/status`)).set("offline");
+            }
+
+            // Sync CCTV Nodes
+            onValue(ref(db, `${secPath}/nodes`), (snap) => {
+                const data = snap.val() || {};
+                
+                if(currentMode === 'monitor') {
+                    renderMonitorGrid(data);
+                }
+                
+                // Monitor Global Motion Alerts
+                Object.keys(data).forEach(id => {
+                    if(id === myCamName) return; 
+                    const node = data[id];
+                    // Jika ada gerakan dalam 5 detik terakhir
+                    if(node.last_motion_time && (Date.now() - node.last_motion_time < 5000)) {
+                        showAlert(id, node.last_motion_time);
+                    }
+                });
+            });
+
+            // Sync Home Status
+            onValue(ref(db, homePath), (snap) => {
+                const val = snap.val() || { devices: {}, sensors: {} };
+                updateHomeUI(val);
+            });
+        }
+
+        function renderMonitorGrid(nodes) {
+            const grid = document.getElementById('monitor-grid');
+            grid.innerHTML = '';
             
-            // Sensor Suhu & Lembab
-            document.getElementById('temp-val').innerText = (data.sensors?.temperature || '--') + '°C';
-            document.getElementById('hum-val').innerText = (data.sensors?.humidity || '--') + '%';
+            const keys = Object.keys(nodes);
+            if(keys.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center py-20 text-slate-700 text-[11px] uppercase font-black tracking-widest italic glass rounded-[2rem]">Belum ada kamera terhubung</div>';
+                return;
+            }
 
-            // HW Status
-            const isOnline = (Date.now() - (data.last_online || 0)) < 15000;
-            document.getElementById('hw-dot').className = `w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`;
-            document.getElementById('hw-txt').innerText = isOnline ? 'Tersambung' : 'Terputus';
-
-            // Relay Buttons
-            const ctrlContainer = document.getElementById('tab-ctrl');
-            ctrlContainer.innerHTML = '';
-            for(let i=1; i<=8; i++) {
-                const id = `relay${i}`;
-                const state = data.states?.[id] || false;
-                const label = data.names?.[id] || `Saklar ${i}`;
-                ctrlContainer.innerHTML += `
-                    <div onclick="toggleSwitch('${id}', ${state})" class="glass p-6 rounded-3xl cursor-pointer transition-all active:scale-95 ${state ? 'border-blue-500 shadow-[0_0_20px_rgba(37,99,235,0.2)]' : ''}">
-                        <div class="flex justify-between items-center mb-4">
-                            <span class="text-2xl">${state ? '💡' : '🔌'}</span>
-                            <div class="w-1.5 h-1.5 rounded-full ${state ? 'bg-blue-500 animate-pulse' : 'bg-slate-700'}"></div>
-                        </div>
-                        <p class="text-[11px] font-black text-white uppercase truncate">${label}</p>
-                        <p class="text-[9px] font-bold ${state ? 'text-blue-400' : 'text-slate-500'} mt-1 uppercase">${state ? 'Aktif' : 'Mati'}</p>
+            keys.forEach(id => {
+                const n = nodes[id];
+                const isLive = (Date.now() - n.last_motion_time < 5000);
+                const card = document.createElement('div');
+                card.className = `cctv-card ${isLive ? 'active-motion' : ''}`;
+                card.innerHTML = `
+                    <img src="${n.last_snapshot || ''}" class="snapshot-img" onerror="this.src='https://via.placeholder.com/640x360/000000/FFFFFF?text=MENUNGGU+SNAPSHOT'">
+                    <div class="absolute top-4 left-4 bg-black/70 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase text-white backdrop-blur border border-white/10">
+                        ${id.replace(/_/g, ' ')}
+                    </div>
+                    <button class="delete-btn" onclick="window.deleteSnapshot('${id}')">Hapus</button>
+                    ${isLive ? '<div class="absolute inset-0 border-4 border-red-600 animate-pulse pointer-events-none"></div>' : ''}
+                    <div class="absolute bottom-4 left-4">
+                         <span class="text-[8px] font-bold text-white/50 bg-black/40 px-2 py-0.5 rounded uppercase">
+                            Status: ${n.status || 'offline'}
+                         </span>
                     </div>
                 `;
+                grid.appendChild(card);
+            });
+        }
+
+        window.deleteSnapshot = (id) => {
+            if(confirm(`Hapus data dan snapshot dari kamera "${id}"?`)) {
+                remove(ref(db, `${secPath}/nodes/${id}`))
+                    .then(() => console.log("Deleted:", id))
+                    .catch(e => alert("Gagal menghapus: " + e.message));
             }
-        });
+        };
 
-        window.toggleSwitch = (id, cur) => set(ref(db, `${rootPath}/states/${id}`), !cur);
-
-        // VISION ENGINE
-        async function initVision() {
-            if(!video.srcObject) {
-                try {
-                    addLog("Mengaktifkan Kamera...");
-                    const stream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { width: 640, height: 480, facingMode: "user" } 
+        window.clearAllSecurityData = () => {
+            if(confirm("Apakah Anda yakin ingin menghapus SELURUH data kamera dan log keamanan?")) {
+                remove(ref(db, `${secPath}/nodes`))
+                    .then(() => {
+                        document.getElementById('security-logs').innerHTML = '<p class="text-slate-600 italic py-4 text-center">Data dibersihkan.</p>';
                     });
-                    video.srcObject = stream;
-                    await loadModels();
-                } catch(e) {
-                    addLog("Kamera Gagal Akses.");
-                }
             }
-        }
+        };
 
-        async function loadModels() {
+        // --- CAMERA ENGINE ---
+        async function startCCTV() {
             try {
-                addLog("Mengunduh otak AI dari GitHub...");
-                // Menggunakan TinyFaceDetector agar lebih ringan untuk koneksi internet
-                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_PATH);
-                await faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_PATH);
-                await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_PATH);
-                await faceapi.nets.ageGenderNet.loadFromUri(MODEL_PATH);
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: 640 } });
+                const v = document.getElementById('webcam');
+                v.srcObject = stream;
                 
-                aiReady = true;
-                document.getElementById('ai-indicator').classList.replace('bg-red-500', 'bg-green-500');
-                document.getElementById('ai-status').innerText = "AI ONLINE";
-                addLog("AI Berhasil Dimuat.");
-                processFrame();
-            } catch(e) {
-                console.error(e);
-                addLog("Gagal Memuat Model AI.");
-            }
-        }
+                const canvas = document.createElement('canvas');
+                canvas.width = 64; canvas.height = 36;
+                const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
-        async function processFrame() {
-            if(!aiReady || activeTab !== 'vis') return;
-
-            // Update FPS
-            const now = performance.now();
-            const fps = Math.round(1000 / (now - lastFrameTime));
-            lastFrameTime = now;
-            document.getElementById('fps-meter').innerText = fps;
-
-            // Paksa Canvas mengikuti ukuran Tampilan Video (Penting untuk Label)
-            canvas.width = video.clientWidth;
-            canvas.height = video.clientHeight;
-
-            const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }))
-                .withFaceLandmarks(true)
-                .withFaceExpressions()
-                .withAgeAndGender();
-
-            const resizedResults = faceapi.resizeResults(detections, { width: canvas.width, height: canvas.height });
-            
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            if(resizedResults.length > 0) {
-                resizedResults.forEach(result => {
-                    const { detection, age, gender, expressions } = result;
-                    const box = detection.box;
-
-                    // 1. Gambar Kotak (Futuristik)
-                    ctx.strokeStyle = '#2563eb';
-                    ctx.lineWidth = 3;
-                    ctx.strokeRect(box.x, box.y, box.width, box.height);
-
-                    // 2. Olah Label
-                    const topExp = Object.keys(expressions).reduce((a, b) => expressions[a] > expressions[b] ? a : b);
-                    const genderIndo = gender === 'male' ? 'PRIA' : 'WANITA';
-                    const labelText = `${genderIndo} | ${Math.round(age)}TH | ${topExp.toUpperCase()}`;
-
-                    // 3. Gambar Background Label
-                    ctx.font = '900 12px Outfit';
-                    const textWidth = ctx.measureText(labelText).width;
+                const detectMotion = () => {
+                    if(!stream || currentMode !== 'cctv') return;
+                    ctx.drawImage(v, 0, 0, 64, 36);
+                    const currentData = ctx.getImageData(0, 0, 64, 36);
                     
-                    ctx.fillStyle = '#2563eb';
-                    ctx.fillRect(box.x, box.y - 30, textWidth + 20, 30);
-
-                    // 4. Gambar Teks
-                    ctx.fillStyle = 'white';
-                    ctx.fillText(labelText, box.x + 10, box.y - 10);
-                });
+                    if(prevImgData) {
+                        let diff = 0;
+                        for(let i=0; i<currentData.data.length; i+=4) {
+                            const rDiff = Math.abs(currentData.data[i] - prevImgData.data[i]);
+                            const gDiff = Math.abs(currentData.data[i+1] - prevImgData.data[i+1]);
+                            const bDiff = Math.abs(currentData.data[i+2] - prevImgData.data[i+2]);
+                            if(rDiff + gDiff + bDiff > 100) diff++;
+                        }
+                        // Ambang batas sensitivitas gerakan
+                        if(diff > 120) uploadSnapshot(v);
+                    }
+                    prevImgData = currentData;
+                    requestAnimationFrame(detectMotion);
+                };
+                detectMotion();
+            } catch(e) { 
+                alert("Error Kamera: " + e.message); 
             }
-
-            requestAnimationFrame(processFrame);
         }
 
-        function addLog(m) {
-            const logs = document.getElementById('vision-logs');
-            const d = document.createElement('div');
-            d.innerHTML = `<span class="text-blue-500 mr-2">●</span> ${m}`;
-            logs.prepend(d);
-            if(logs.children.length > 6) logs.lastChild.remove();
+        function uploadSnapshot(v) {
+            const now = Date.now();
+            if(now - lastCaptured < 4000) return; // Cooldown 4 detik
+            lastCaptured = now;
+
+            const cap = document.createElement('canvas');
+            cap.width = 480; cap.height = 270;
+            cap.getContext('2d').drawImage(v, 0, 0, 480, 270);
+            const dataUrl = cap.toDataURL('image/jpeg', 0.6);
+
+            update(ref(db, `${secPath}/nodes/${myCamName}`), {
+                last_motion_time: now,
+                last_snapshot: dataUrl,
+                status: "online"
+            });
+            
+            const localCard = document.getElementById('local-cctv-card');
+            localCard.classList.add('active-motion');
+            setTimeout(() => localCard.classList.remove('active-motion'), 1500);
         }
 
-        window.onload = () => tab('ctrl');
+        // --- SMART HOME ENGINE ---
+        function updateHomeUI(data) {
+            const dev = data.devices || {};
+            const sens = data.sensors || { temp: 24, hum: 60 };
+
+            document.getElementById('temp-val').innerText = sens.temp + "°C";
+            document.getElementById('hum-val').innerText = sens.hum + "%";
+
+            ['lampu', 'ac', 'pintu', 'kipas'].forEach(id => {
+                const isOn = dev[id] === true;
+                const card = document.getElementById(`card-${id}`);
+                const statusText = document.getElementById(`status-${id}`);
+                const iconBox = card.querySelector('.icon-box');
+                
+                card.classList.toggle('on', isOn);
+                
+                if(id === 'pintu') {
+                    statusText.innerText = isOn ? "OPENED" : "LOCKED";
+                    document.getElementById('icon-pintu-box').innerText = isOn ? "🔓" : "🔒";
+                    iconBox.style.background = isOn ? "rgba(59,130,246,0.3)" : "";
+                } else {
+                    statusText.innerText = isOn ? "ACTIVE" : "OFF";
+                    iconBox.style.background = isOn ? "rgba(59,130,246,0.3)" : "";
+                }
+            });
+        }
+
+        window.toggleDevice = (key) => {
+            const card = document.getElementById(`card-${key}`);
+            const isCurrentlyOn = card.classList.contains('on');
+            update(ref(db, `${homePath}/devices`), { [key]: !isCurrentlyOn });
+        };
+
+        function showAlert(id, time) {
+            const banner = document.getElementById('global-alert');
+            const title = document.getElementById('alert-title');
+            const sub = document.getElementById('alert-subtitle');
+
+            title.innerText = `GERAKAN: ${id.replace(/_/g, ' ')}`;
+            sub.innerText = `LOKASI: ${id} | ${new Date(time).toLocaleTimeString()}`;
+            
+            banner.classList.add('show');
+
+            // Log entry
+            const logArea = document.getElementById('security-logs');
+            if(logArea.querySelector('p.italic')) logArea.innerHTML = '';
+            
+            const existingLog = document.getElementById(`log-${id}-${time}`);
+            if(!existingLog) {
+                const log = document.createElement('div');
+                log.id = `log-${id}-${time}`;
+                log.className = "flex justify-between items-center bg-white/5 p-3 rounded-xl border-l-4 border-red-500 animate-slide-in";
+                log.innerHTML = `
+                    <div>
+                        <p class="font-black text-blue-400 uppercase text-[10px]">${id}</p>
+                        <p class="text-[9px] opacity-50 uppercase font-bold">Terdeteksi Gerakan</p>
+                    </div>
+                    <span class="text-[9px] font-black opacity-80">${new Date(time).toLocaleTimeString()}</span>
+                `;
+                logArea.prepend(log);
+            }
+            
+            if(alertTimeout) clearTimeout(alertTimeout);
+            alertTimeout = setTimeout(() => {
+                banner.classList.remove('show');
+            }, 6000);
+        }
+
     </script>
 </body>
 </html>
+
