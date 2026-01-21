@@ -1,0 +1,17 @@
+{
+"format": "layers-model",
+"generatedBy": "TensorFlow.js",
+"convertedBy": "NexHome Masdar Converter",
+"modelTopology": {
+"class_name": "Sequential",
+"config": {
+"layers": []
+}
+},
+"weightsManifest": [
+{
+"paths": ["group1-shard1of1.bin"],
+"weights": []
+}
+]
+}
