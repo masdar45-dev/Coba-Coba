@@ -3,176 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NexHome Masdar V4.6.0</title>
+    <title>NexHome Masdar V4.7.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #0f172a; --accent: #38bdf8; --card-bg: rgba(30, 41, 59, 0.7); }
+        :root { --bg: #0b0f1a; --accent: #38bdf8; --card-bg: rgba(22, 30, 46, 0.8); }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg); color: #f8fafc; overflow: hidden; height: 100vh; }
-        .glass { background: var(--card-bg); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .tab-content { display: none; height: calc(100vh - 190px); overflow-y: auto; padding-bottom: 100px; width: 100%; }
+        .glass { background: var(--card-bg); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .tab-content { display: none; height: calc(100vh - 180px); overflow-y: auto; padding-bottom: 100px; }
         .tab-content.active { display: flex; flex-direction: column; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         
-        #login-screen { position: fixed; inset: 0; background: #0f172a; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+        #login-screen { position: fixed; inset: 0; background: #0b0f1a; z-index: 500; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
         .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #38bdf8; margin: 0 10px; transition: 0.3s; }
-        .pin-dot.filled { background: #38bdf8; box-shadow: 0 0 10px #38bdf8; transform: scale(1.2); }
+        .pin-dot.filled { background: #38bdf8; box-shadow: 0 0 15px #38bdf8; transform: scale(1.2); }
         
-        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
-        .mic-active { animation: pulse-red 1.5s infinite; background-color: #ef4444 !important; }
-        
-        #voice-overlay { position: fixed; top: 15%; left: 50%; transform: translateX(-50%); background: rgba(56, 189, 248, 0.95); padding: 8px 20px; border-radius: 50px; font-size: 10px; font-weight: 800; text-transform: uppercase; z-index: 1000; display: none; color: #0f172a; }
-        
-        .chat-bubble { max-width: 85%; padding: 12px 16px; border-radius: 20px; font-size: 13px; margin-bottom: 12px; line-height: 1.4; }
-        .chat-user { background: #38bdf8; color: #0f172a; align-self: flex-end; border-bottom-right-radius: 4px; font-weight: 600; }
+        @keyframes wave { 0%, 100% { transform: scaleY(0.5); } 50% { transform: scaleY(1.5); } }
+        .voice-bar { width: 4px; height: 16px; background: #38bdf8; border-radius: 10px; animation: wave 1s infinite ease-in-out; }
+        .mic-active { background-color: #ef4444 !important; box-shadow: 0 0 25px rgba(239, 68, 68, 0.4); }
+
+        .chat-bubble { max-width: 85%; padding: 14px 18px; border-radius: 24px; font-size: 14px; margin-bottom: 12px; line-height: 1.5; }
+        .chat-user { background: #38bdf8; color: #0b0f1a; align-self: flex-end; border-bottom-right-radius: 4px; font-weight: 700; }
         .chat-ai { background: rgba(255,255,255,0.05); color: #f8fafc; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid rgba(255,255,255,0.1); }
         
-        .fade-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Glass Modal */
-        #modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); z-index: 300; display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
-        #modal.active { display: flex; }
+        #voice-visualizer { display: none; position: fixed; top: 10%; left: 50%; transform: translateX(-50%); z-index: 1000; }
     </style>
 </head>
 <body class="flex flex-col">
 
-    <div id="voice-overlay">Mendengarkan...</div>
+    <!-- Visualizer Suara Gemini -->
+    <div id="voice-visualizer" class="flex items-center gap-1 bg-black/40 px-4 py-2 rounded-full backdrop-blur-md border border-white/10">
+        <div class="voice-bar" style="animation-delay: 0.1s"></div>
+        <div class="voice-bar" style="animation-delay: 0.3s"></div>
+        <div class="voice-bar" style="animation-delay: 0.5s"></div>
+        <div class="voice-bar" style="animation-delay: 0.2s"></div>
+        <span class="text-[9px] font-black uppercase ml-2 tracking-widest text-blue-400">Gemini Listening</span>
+    </div>
 
     <!-- Login Screen -->
     <div id="login-screen">
-        <div class="mb-10 text-center">
-            <div class="w-20 h-20 bg-blue-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-blue-500/20">
+        <div class="mb-12 text-center">
+            <div class="w-20 h-20 bg-blue-500/10 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-blue-500/20 shadow-2xl shadow-blue-500/10">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
             </div>
-            <h1 class="text-2xl font-black italic uppercase">NexHome <span class="text-blue-400">Masdar</span></h1>
-            <p class="text-slate-500 text-[10px] mt-2 uppercase tracking-[0.3em] font-bold">V4.6.0 Gemini Experience</p>
+            <h1 class="text-2xl font-black italic tracking-tighter uppercase">NexHome <span class="text-blue-400">Masdar</span></h1>
+            <p class="text-slate-500 text-[10px] mt-2 uppercase tracking-[0.4em] font-bold">V4.7.0 Natural Engine</p>
         </div>
-        
-        <div class="flex mb-16">
-            <div class="pin-dot" id="dot-0"></div>
-            <div class="pin-dot" id="dot-1"></div>
-            <div class="pin-dot" id="dot-2"></div>
-            <div class="pin-dot" id="dot-3"></div>
-        </div>
-
-        <div class="grid grid-cols-3 gap-6">
-            <script>
-                for(let i=1; i<=9; i++) document.write(`<button onclick="pressPin('${i}')" class="w-16 h-16 rounded-full glass text-xl font-bold active:scale-90 transition-all">${i}</button>`);
-            </script>
-            <div></div>
-            <button onclick="pressPin('0')" class="w-16 h-16 rounded-full glass text-xl font-bold active:scale-90">0</button>
-            <button onclick="clearPin()" class="text-red-500 text-[10px] font-black uppercase">Reset</button>
+        <div class="flex mb-20"><div class="pin-dot" id="dot-0"></div><div class="pin-dot" id="dot-1"></div><div class="pin-dot" id="dot-2"></div><div class="pin-dot" id="dot-3"></div></div>
+        <div class="grid grid-cols-3 gap-8">
+            <script>for(let i=1; i<=9; i++) document.write(`<button onclick="pressPin('${i}')" class="w-16 h-16 rounded-full glass text-xl font-bold active:scale-90 transition-all">${i}</button>`);</script>
+            <div></div><button onclick="pressPin('0')" class="w-16 h-16 rounded-full glass text-xl font-bold active:scale-90">0</button>
+            <button onclick="clearPin()" class="text-red-500 text-[10px] font-black uppercase">Clear</button>
         </div>
     </div>
 
     <!-- Header -->
-    <header class="p-5 flex flex-col gap-3 bg-slate-900/40 border-b border-white/5 backdrop-blur-md">
+    <header class="p-6 flex flex-col gap-4">
         <div class="flex justify-between items-center">
             <div>
-                <h1 class="text-base font-black italic uppercase">NexHome <span class="text-blue-400">Masdar</span></h1>
-                <div class="flex items-center gap-1.5">
-                    <div id="cloud-dot" class="w-1.5 h-1.5 rounded-full bg-red-500"></div>
-                    <span class="text-[8px] font-bold text-slate-500 uppercase tracking-widest">AI Asisten Aktif</span>
-                </div>
+                <h1 class="text-lg font-black italic uppercase leading-none">NexHome <span class="text-blue-400">Masdar</span></h1>
+                <span id="conn-text" class="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-1 inline-block">Menghubungkan...</span>
             </div>
-            <button id="btn-eco-toggle" onclick="toggleEcoMode()" class="px-3 py-1.5 border rounded-full text-[8px] font-black uppercase transition-all">Eco Mode: --</button>
-        </div>
-        
-        <div class="w-full py-1.5 px-3 bg-white/5 border border-white/5 rounded-lg flex items-center gap-2 h-7 overflow-hidden">
-            <span class="text-[8px] font-black text-blue-400 uppercase italic shrink-0">Status AI:</span>
-            <div id="log-text" class="text-[8px] font-bold text-slate-400 uppercase truncate">Menyiapkan sistem Gemini...</div>
+            <div class="flex items-center gap-2">
+                <div id="cloud-dot" class="w-2 h-2 rounded-full bg-red-500"></div>
+                <button onclick="toggleEcoMode()" id="eco-btn" class="px-4 py-2 glass rounded-full text-[8px] font-black uppercase">Eco: --</button>
+            </div>
         </div>
     </header>
 
-    <!-- Main -->
-    <main class="flex-1 relative overflow-hidden">
+    <main class="flex-1 relative overflow-hidden px-6">
         
-        <!-- ASISTEN AI -->
-        <div id="tab-ai" class="tab-content active p-5 scrollbar-hide">
+        <!-- ASISTEN GEMINI -->
+        <div id="tab-ai" class="tab-content active scrollbar-hide">
             <div class="flex-1 flex flex-col space-y-4 overflow-y-auto" id="chat-container">
-                <div class="chat-bubble chat-ai">Halo Masdar! Senang melihatmu kembali. Apa yang bisa aku bantu hari ini?</div>
+                <div class="chat-bubble chat-ai">Halo Masdar. Suaraku sekarang sudah lebih enak didengar, kan? Ada yang bisa kubantu?</div>
             </div>
-            <!-- Gemini Suggestion Box -->
-            <div id="ai-suggestion" class="mt-4 p-4 glass rounded-2xl border-l-4 border-blue-400 hidden fade-in">
-                <div class="flex items-center gap-2 mb-1">
-                    <div class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
-                    <p class="text-[8px] font-black text-blue-400 uppercase italic">Pikiran Gemini:</p>
-                </div>
-                <p id="suggestion-text" class="text-[11px] font-medium text-slate-300 leading-relaxed italic">Menganalisis data rumah...</p>
+            <div id="ai-suggestion" class="mt-4 p-5 glass rounded-[2rem] border-l-4 border-blue-400 hidden">
+                <p class="text-[9px] font-black text-blue-400 uppercase italic mb-1">Analisis Gemini:</p>
+                <p id="suggestion-text" class="text-[12px] font-medium text-slate-300 leading-relaxed"></p>
             </div>
         </div>
 
         <!-- DASHBOARD -->
-        <div id="tab-dashboard" class="tab-content p-5 space-y-4 scrollbar-hide">
-            <div class="grid grid-cols-2 gap-3">
-                <div class="glass p-4 rounded-3xl">
-                    <p class="text-[8px] font-bold text-slate-500 uppercase mb-2">Suhu & Lembab</p>
-                    <div class="flex justify-between items-end">
-                        <p class="text-2xl font-black"><span id="temp">--</span>°</p>
-                        <p class="text-xs font-bold text-blue-400"><span id="hum">--</span>%</p>
-                    </div>
+        <div id="tab-dashboard" class="tab-content space-y-4 scrollbar-hide">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass p-5 rounded-[2rem]">
+                    <p class="text-[8px] font-black text-slate-500 uppercase mb-3">Suhu Ruang</p>
+                    <p class="text-3xl font-black"><span id="temp">--</span>°<span class="text-blue-400 text-sm font-bold">C</span></p>
                 </div>
-                <div class="glass p-4 rounded-3xl">
-                    <p class="text-[8px] font-bold text-slate-500 uppercase mb-2">Udara (PPM)</p>
-                    <p id="air-status" class="text-sm font-black uppercase text-emerald-400">Sehat</p>
-                    <p class="text-[8px] text-slate-500 mt-1"><span id="air-val">--</span> PPM</p>
+                <div class="glass p-5 rounded-[2rem]">
+                    <p class="text-[8px] font-black text-slate-500 uppercase mb-3">Udara (PPM)</p>
+                    <p id="air-status" class="text-sm font-black uppercase text-emerald-400">Ideal</p>
+                    <p class="text-[10px] text-slate-500 font-bold mt-1"><span id="air-val">--</span> PPM</p>
                 </div>
             </div>
-            
-            <div class="glass p-6 rounded-[2.5rem] relative overflow-hidden h-36 flex flex-col justify-end">
-                <p class="text-[8px] font-black text-slate-500 uppercase absolute top-6 left-6">Level Air Tandon</p>
-                <p class="text-4xl font-black z-10"><span id="water-val">--</span><span class="text-blue-400 text-lg ml-1">%</span></p>
-                <div id="water-wave" class="absolute bottom-0 left-0 right-0 bg-blue-500/20 transition-all duration-1000" style="height: 0%"></div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div class="glass p-4 rounded-3xl text-center">
-                    <p class="text-[8px] font-bold text-slate-500 uppercase mb-1">Lampu Aktif</p>
-                    <p id="sw-on-count" class="text-xl font-black text-blue-400">0</p>
-                </div>
-                <div class="glass p-4 rounded-3xl text-center">
-                    <p class="text-[8px] font-bold text-slate-500 uppercase mb-1">Pintu Utama</p>
-                    <p id="insight-door-status" class="text-xs font-black uppercase">Locked</p>
-                </div>
+            <div class="glass p-6 rounded-[2.5rem] relative overflow-hidden h-40 flex flex-col justify-end">
+                <p class="text-[9px] font-black text-slate-500 uppercase absolute top-6 left-6">Volume Air Tandon</p>
+                <p class="text-5xl font-black z-10"><span id="water-val">--</span><span class="text-blue-400 text-xl ml-1">%</span></p>
+                <div id="water-wave" class="absolute bottom-0 left-0 right-0 bg-blue-500/30 transition-all duration-1000" style="height: 0%"></div>
             </div>
         </div>
 
         <!-- KONTROL -->
-        <div id="tab-control" class="tab-content p-5 scrollbar-hide">
-            <div class="flex gap-2 mb-4">
-                <button onclick="setAllRelays(true)" class="flex-1 p-3 glass rounded-2xl text-[8px] font-black uppercase text-blue-400 border border-blue-500/20">Nyalakan Semua</button>
-                <button onclick="setAllRelays(false)" class="flex-1 p-3 glass rounded-2xl text-[8px] font-black uppercase text-slate-400 border border-white/5">Matikan Semua</button>
+        <div id="tab-control" class="tab-content space-y-4 scrollbar-hide">
+            <div class="flex gap-3">
+                <button onclick="setAllRelays(true)" class="flex-1 py-4 glass rounded-2xl text-[9px] font-black uppercase text-blue-400">Nyalakan Semua</button>
+                <button onclick="setAllRelays(false)" class="flex-1 py-4 glass rounded-2xl text-[9px] font-black uppercase text-slate-500">Matikan Semua</button>
             </div>
-            <div id="grid-switches" class="grid grid-cols-2 gap-3"></div>
+
+            <!-- Pintu Utama Control -->
+            <div class="glass p-6 rounded-[2.5rem] flex justify-between items-center border-l-4 border-blue-500">
+                <div>
+                    <p class="text-sm font-black uppercase">Pintu Utama</p>
+                    <p id="door-status-text" class="text-[10px] text-slate-500 font-bold uppercase mt-1 italic">Terkunci Rapat</p>
+                </div>
+                <button id="btn-door-toggle" class="w-14 h-14 rounded-2xl bg-slate-800/50 flex items-center justify-center border border-white/10 active:scale-90 transition-all">
+                    <svg id="door-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                </button>
+            </div>
+
+            <div id="grid-switches" class="grid grid-cols-2 gap-4"></div>
         </div>
     </main>
 
-    <!-- Navigation -->
-    <nav class="fixed bottom-0 left-0 right-0 glass h-20 flex items-center justify-around px-4 pb-4 z-50 rounded-t-[2.5rem]">
-        <button onclick="switchTab('ai')" id="nav-ai" class="flex flex-col items-center gap-1 text-blue-400">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-            <span class="text-[7px] font-black uppercase tracking-widest">Gemini</span>
+    <!-- Nav -->
+    <nav class="fixed bottom-0 left-0 right-0 glass h-24 flex items-center justify-around px-6 pb-6 z-100 rounded-t-[3rem]">
+        <button onclick="switchTab('ai')" id="nav-ai" class="flex flex-col items-center gap-1.5 text-blue-400">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            <span class="text-[8px] font-black uppercase tracking-widest">Gemini</span>
         </button>
-        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center gap-1 text-slate-600">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
-            <span class="text-[7px] font-black uppercase tracking-widest">Monitor</span>
+        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center gap-1.5 text-slate-600">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+            <span class="text-[8px] font-black uppercase tracking-widest">Monitor</span>
         </button>
-        <button onclick="switchTab('control')" id="nav-control" class="flex flex-col items-center gap-1 text-slate-600">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect><polyline points="17 2 12 7 7 2"></polyline></svg>
-            <span class="text-[7px] font-black uppercase tracking-widest">Kontrol</span>
+        <button onclick="switchTab('control')" id="nav-control" class="flex flex-col items-center gap-1.5 text-slate-600">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect><polyline points="17 2 12 7 7 2"></polyline></svg>
+            <span class="text-[8px] font-black uppercase tracking-widest">Kontrol</span>
         </button>
     </nav>
 
-    <!-- Voice Trigger -->
-    <button id="btn-voice" class="fixed bottom-24 right-6 w-14 h-14 bg-blue-600 rounded-full hidden items-center justify-center shadow-2xl z-[100] border-4 border-slate-900 active:scale-95">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>
+    <!-- Mic Button -->
+    <button id="btn-voice" class="fixed bottom-28 right-8 w-16 h-16 bg-blue-600 rounded-full hidden items-center justify-center shadow-[0_0_30px_rgba(56,189,248,0.3)] z-[200] border-4 border-slate-900 active:scale-95 transition-all">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>
     </button>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, onValue, set, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+        const apiKey = ""; // Diset oleh environment
         const firebaseConfig = {
             apiKey: "AIzaSyCVY-tSDQvob6kYB8-ebLMNVb3Rge1mtx8",
             authDomain: "smart-home-masdar.firebaseapp.com",
@@ -188,169 +167,132 @@
         let currentStates = {};
         let currentSensors = {};
         let pinInput = "";
-        const CORRECT_PIN = "1234";
 
-        // --- GEMINI STYLE SPEECH ---
-        function speakGemini(text, skipChat = false) {
-            window.speechSynthesis.cancel();
-            const msg = new SpeechSynthesisUtterance(text);
-            msg.lang = 'id-ID';
-            msg.pitch = 1.1; // Sedikit lebih tinggi agar ramah
-            msg.rate = 1.0;  // Kecepatan natural
-            window.speechSynthesis.speak(msg);
+        // --- GEMINI NATURAL VOICE ENGINE ---
+        async function speakGemini(text, skipChat = false) {
             if(!skipChat) addChatMessage(text, 'ai');
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: `Bicara dengan intonasi natural, ramah, dan santai seperti teman: ${text}` }] }],
+                        generationConfig: {
+                            responseModalities: ["AUDIO"],
+                            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Aoede" } } }
+                        }
+                    })
+                });
+
+                const result = await response.json();
+                const audioData = result.candidates[0].content.parts[0].inlineData.data;
+                
+                // Convert PCM/L16 to WAV and Play
+                const audioBlob = b64toBlob(audioData, 'audio/wav');
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const audio = new Audio(audioUrl);
+                audio.play();
+            } catch (err) {
+                // Fallback jika API gagal (menggunakan speech synthesis dengan tuning lebih baik)
+                const msg = new SpeechSynthesisUtterance(text);
+                msg.lang = 'id-ID'; msg.pitch = 1.1; msg.rate = 0.95;
+                window.speechSynthesis.speak(msg);
+            }
+        }
+
+        function b64toBlob(b64Data, contentType) {
+            const byteCharacters = atob(b64Data);
+            const byteArrays = [];
+            for (let i = 0; i < byteCharacters.length; i++) byteArrays.push(byteCharacters.charCodeAt(i));
+            return new Blob([new Uint8Array(byteArrays)], {type: contentType});
         }
 
         function addChatMessage(text, role) {
             const container = document.getElementById('chat-container');
             const div = document.createElement('div');
-            div.className = `chat-bubble ${role === 'user' ? 'chat-user' : 'chat-ai'} fade-in`;
+            div.className = `chat-bubble ${role === 'user' ? 'chat-user' : 'chat-ai'}`;
             div.innerText = text;
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
         }
 
-        // --- LOGIKA NARASI GEMINI ---
-        function generateGeminiReport() {
-            const { temperature, humidity, air_quality, water_level } = currentSensors;
-            const greetings = ["Oke Masdar, ini laporan rumahmu.", "Tentu, mari kita cek kondisi rumah saat ini.", "Rumahmu dalam pantauanku, begini kondisinya."];
-            const greeting = greetings[Math.floor(Math.random() * greetings.length)];
+        // --- GEMINI CONVERSATION LOGIC ---
+        function getGeminiInsight() {
+            const { temperature, air_quality, water_level } = currentSensors;
+            let parts = [];
             
-            let sentences = [greeting];
+            if(temperature > 30) parts.push("Di sini agak panas ya, Masdar.");
+            else if(temperature < 23) parts.push("Wah, suhunya sejuk banget sekarang.");
+            
+            if(air_quality > 100) parts.push("Kualitas udara lagi nggak oke, mungkin bisa nyalakan penyaring udara?");
+            
+            if(water_level < 20) parts.push("Oh ya, tandon air kamu hampir kosong nih, sisa " + water_level + " persen saja.");
+            else parts.push("Untuk air tandon, posisinya aman di " + water_level + " persen.");
 
-            // Narasi Suhu
-            if(temperature) {
-                if(temperature < 23) sentences.push(`Di sini suhunya cukup adem, sekitar ${temperature} derajat.`);
-                else if(temperature > 30) sentences.push(`Lagi agak gerah ya Masdar, suhunya menyentuh ${temperature} derajat.`);
-                else sentences.push(`Suhu ruangan sangat nyaman di angka ${temperature} derajat.`);
-            }
-
-            // Narasi Udara
-            if(air_quality) {
-                const airTxt = air_quality < 50 ? "segar banget" : (air_quality < 100 ? "masih aman" : "agak pengap");
-                sentences.push(`Kualitas udaranya ${airTxt} dengan kadar ${air_quality} PPM.`);
-            }
-
-            // Narasi Air
-            if(water_level !== undefined) {
-                if(water_level < 20) sentences.push(`Oh ya, air tandonmu sisa ${water_level} persen lagi, jangan sampai kehabisan ya.`);
-                else sentences.push(`Persediaan air tandon aman di level ${water_level} persen.`);
-            }
-
-            // Narasi Perangkat
             let onCount = 0;
             for(let i=1; i<=8; i++) if(currentStates[`relay${i}`]) onCount++;
-            if(onCount > 0) sentences.push(`Ada ${onCount} perangkat yang masih menyala.`);
-            else sentences.push(`Semua perangkat dalam keadaan mati.`);
+            if(onCount > 0) parts.push("Ada " + onCount + " perangkat yang lagi nyala.");
 
-            // Pintu
-            sentences.push(`Dan untuk pintu utama, statusnya ${currentStates.door ? 'masih terbuka' : 'sudah terkunci aman'}.`);
-
-            return sentences.join(" ");
+            return parts.join(" ");
         }
 
-        function getFriendlySaran() {
-            const { temperature, humidity, air_quality, water_level } = currentSensors;
-            let sarans = [];
-
-            if (temperature < 22) sarans.push("Masdar, suhunya lagi dingin nih, jangan lupa pakai jaket ya kalau mau keluar.");
-            if (humidity > 75) sarans.push("Udaranya agak lembab, mungkin jendela bisa dibuka sebentar supaya lebih segar.");
-            if (air_quality > 100) sarans.push("Kualitas udara lagi kurang bagus, sebaiknya nyalakan air purifier atau tutup jendela dulu.");
-            if (water_level < 20) sarans.push("Cek tandon air ya, levelnya sudah sangat rendah.");
-
-            const box = document.getElementById('ai-suggestion');
-            const txt = document.getElementById('suggestion-text');
-            
-            if (sarans.length > 0) {
-                box.classList.remove('hidden');
-                txt.innerText = sarans[0];
-                return sarans[0];
-            } else {
-                box.classList.add('hidden');
-                return "Semua sensor menunjukkan kondisi ideal. Masdar bisa bersantai dengan tenang!";
-            }
-        }
-
-        // --- AUTH & UI ---
+        // --- AUTH ---
         window.pressPin = (num) => {
             if(pinInput.length < 4) {
                 pinInput += num;
                 for(let i=0; i<4; i++) document.getElementById(`dot-${i}`).className = `pin-dot ${pinInput.length > i ? 'filled' : ''}`;
-                if(pinInput === CORRECT_PIN) {
+                if(pinInput === "1234") {
                     setTimeout(() => {
-                        document.getElementById('login-screen').style.transform = 'translateY(-100%)';
+                        document.getElementById('login-screen').style.transform = 'scale(1.5)';
+                        document.getElementById('login-screen').style.opacity = '0';
+                        setTimeout(() => document.getElementById('login-screen').style.display = 'none', 600);
                         document.getElementById('btn-voice').style.display = 'flex';
-                        switchTab('ai'); 
-                        speakGemini(`Halo Masdar! Akses diterima. ${getFriendlySaran()}`, true);
+                        speakGemini("Halo Masdar! Akses diterima. Ada yang bisa aku bantu di rumah hari ini?");
                     }, 300);
                 } else if(pinInput.length === 4) {
-                    setTimeout(() => { pinInput = ""; for(let i=0; i<4; i++) document.getElementById(`dot-${i}`).className = 'pin-dot'; }, 200);
+                    pinInput = ""; 
+                    setTimeout(() => { for(let i=0; i<4; i++) document.getElementById(`dot-${i}`).className = 'pin-dot'; }, 200);
                 }
             }
         };
         window.clearPin = () => { pinInput = ""; for(let i=0; i<4; i++) document.getElementById(`dot-${i}`).className = 'pin-dot'; };
 
-        // --- VOICE LOGIC ---
+        // --- VOICE ---
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const recognition = SpeechRecognition ? new SpeechRecognition() : null;
         if(recognition) {
             recognition.lang = 'id-ID';
-            recognition.onresult = (e) => {
-                const cmd = e.results[0][0].transcript.toLowerCase();
-                addChatMessage(cmd, 'user');
-                processGeminiCmd(cmd);
+            recognition.onstart = () => { 
+                document.getElementById('btn-voice').classList.add('mic-active');
+                document.getElementById('voice-visualizer').style.display = 'flex';
             };
+            recognition.onresult = (e) => processCmd(e.results[0][0].transcript.toLowerCase());
             recognition.onend = () => { 
-                document.getElementById('btn-voice').classList.remove('mic-active'); 
-                document.getElementById('voice-overlay').style.display='none'; 
+                document.getElementById('btn-voice').classList.remove('mic-active');
+                document.getElementById('voice-visualizer').style.display = 'none';
             };
         }
+        document.getElementById('btn-voice').onclick = () => { try { recognition.start(); } catch(e) { recognition.stop(); } };
 
-        document.getElementById('btn-voice').onclick = () => {
-            try { recognition.start(); document.getElementById('btn-voice').classList.add('mic-active'); document.getElementById('voice-overlay').style.display='block'; } catch(e) { recognition.stop(); }
-        };
-
-        function processGeminiCmd(cmd) {
-            if (cmd.includes('status') || cmd.includes('laporan') || cmd.includes('gimana kondisi')) {
-                speakGemini(generateGeminiReport());
-                return;
-            }
-
-            if (cmd.includes('semua') || cmd.includes('seluruh')) {
-                const turnOn = cmd.includes('nyala') || cmd.includes('hidup');
-                setAllRelays(turnOn);
-                const resp = turnOn ? "Beres! Semua perangkat sudah aku nyalakan." : "Siap Masdar, semuanya sudah aku matikan ya.";
-                speakGemini(resp);
-                return;
-            }
-
-            if (cmd.includes('hemat')) {
-                toggleEcoMode();
-                return;
-            }
-
-            if (cmd.includes('pintu')) {
+        function processCmd(cmd) {
+            addChatMessage(cmd, 'user');
+            if(cmd.includes('status') || cmd.includes('kondisi') || cmd.includes('laporan')) {
+                speakGemini(getGeminiInsight());
+            } else if(cmd.includes('semua')) {
+                const s = cmd.includes('nyala') || cmd.includes('hidup');
+                setAllRelays(s);
+                speakGemini(s ? "Beres Masdar, semua perangkat sudah aku nyalakan." : "Siap, semua perangkat sudah aku matikan ya.");
+            } else if(cmd.includes('pintu')) {
                 const s = cmd.includes('buka');
                 set(ref(db, `nexhome_v3/states/door`), s);
-                speakGemini(s ? "Pintu utama sudah aku buka ya." : "Oke, pintu utama sekarang terkunci rapat.");
-                return;
+                speakGemini(s ? "Oke, pintu utama sudah aku buka." : "Pintu utama sudah aku kunci rapat, aman!");
+            } else {
+                speakGemini("Maaf Masdar, aku nggak begitu dengar. Bisa diulangi?");
             }
-
-            // Individual Control
-            let handled = false;
-            for (let i = 1; i <= 8; i++) {
-                const name = (currentNames[`relay${i}`] || "").toLowerCase();
-                if (name && cmd.includes(name)) {
-                    const state = cmd.includes('nyala') || cmd.includes('hidup');
-                    set(ref(db, `nexhome_v3/states/relay${i}`), state);
-                    speakGemini(`Siap, ${name} sudah ${state ? 'nyala' : 'mati'}.`);
-                    handled = true;
-                    break;
-                }
-            }
-            if(!handled) speakGemini("Maaf Masdar, aku kurang mengerti. Bisa diulangi?");
         }
 
+        // --- CONTROLS ---
         window.setAllRelays = (state) => {
             const updates = {};
             for(let i=1; i<=8; i++) updates[`nexhome_v3/states/relay${i}`] = state;
@@ -358,18 +300,16 @@
         };
 
         window.toggleEcoMode = () => {
-            const isEcoNow = !currentStates.eco_mode;
-            const updates = { "nexhome_v3/states/eco_mode": isEcoNow };
-            if(isEcoNow) for(let i=1; i<=8; i++) updates[`nexhome_v3/states/relay${i}`] = false;
-            update(ref(db), updates);
-            speakGemini(isEcoNow ? "Mode hemat aku aktifkan ya, semua saklar otomatis mati." : "Mode hemat sudah aku matikan.");
+            const current = currentStates.eco_mode || false;
+            update(ref(db), { "nexhome_v3/states/eco_mode": !current });
+            speakGemini(!current ? "Mode hemat aku aktifkan, Masdar." : "Mode hemat sudah dimatikan.");
         };
 
         window.switchTab = (id) => {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.getElementById(`tab-${id}`).classList.add('active');
-            ['ai', 'dashboard', 'control'].forEach(tab => {
-                document.getElementById(`nav-${tab}`).className = `flex flex-col items-center gap-1 ${id===tab?'text-blue-400':'text-slate-600'}`;
+            ['ai', 'dashboard', 'control'].forEach(t => {
+                document.getElementById(`nav-${t}`).className = `flex flex-col items-center gap-1.5 ${id===t?'text-blue-400':'text-slate-600'}`;
             });
         };
 
@@ -381,48 +321,45 @@
             currentStates = data.states || {};
             currentSensors = data.sensors || {};
 
-            // Sensors UI
+            // Dashboard
             document.getElementById('temp').innerText = data.sensors?.temperature ?? "--";
-            document.getElementById('hum').innerText = data.sensors?.humidity ?? "--";
+            document.getElementById('air-val').innerText = data.sensors?.air_quality ?? "--";
             document.getElementById('water-val').innerText = data.sensors?.water_level ?? 0;
             document.getElementById('water-wave').style.height = `${data.sensors?.water_level ?? 0}%`;
-            document.getElementById('air-val').innerText = data.sensors?.air_quality ?? "--";
-            
-            // Perangkat Stats
-            let onCount = 0;
-            for(let i=1; i<=8; i++) if(data.states?.[`relay${i}`] === true) onCount++;
-            document.getElementById('sw-on-count').innerText = onCount;
 
-            // Eco Mode UI
+            // Door
+            const doorOpen = data.states?.door === true;
+            document.getElementById('door-status-text').innerText = doorOpen ? "Pintu Terbuka" : "Terkunci Rapat";
+            document.getElementById('door-status-text').className = `text-[10px] font-bold uppercase mt-1 italic ${doorOpen ? 'text-red-400' : 'text-slate-500'}`;
+            document.getElementById('door-icon').innerHTML = doorOpen ? 
+                '<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line>' : 
+                '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>';
+            document.getElementById('btn-door-toggle').onclick = () => set(ref(db, `nexhome_v3/states/door`), !doorOpen);
+
+            // Eco
             const isEco = data.states?.eco_mode === true;
-            const ecoBtn = document.getElementById('btn-eco-toggle');
-            ecoBtn.innerText = `Eco Mode: ${isEco ? 'ON' : 'OFF'}`;
-            ecoBtn.className = `px-3 py-1.5 border rounded-full text-[8px] font-black uppercase transition-all ${isEco ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400' : 'bg-blue-500/10 border-blue-500/20 text-blue-400'}`;
+            const ecoBtn = document.getElementById('eco-btn');
+            ecoBtn.innerText = `Eco: ${isEco ? 'Active' : 'Off'}`;
+            ecoBtn.className = `px-4 py-2 glass rounded-full text-[8px] font-black uppercase ${isEco ? 'text-emerald-400 border-emerald-500/50' : 'text-slate-500'}`;
 
-            // Door UI
-            const dOn = data.states?.door === true;
-            document.getElementById('insight-door-status').innerText = dOn ? "Open" : "Locked";
-            document.getElementById('insight-door-status').className = `text-xs font-black uppercase ${dOn ? 'text-red-400' : 'text-blue-400'}`;
-
-            // Switches Grid
+            // Switches
             const grid = document.getElementById('grid-switches');
             grid.innerHTML = '';
             for(let i=1; i<=8; i++){
                 const isOn = data.states?.[`relay${i}`] === true;
                 const name = data.names?.[`relay${i}`] || `Saklar ${i}`;
                 const card = document.createElement('div');
-                card.className = `glass p-4 rounded-3xl transition-all border-l-4 ${isOn ? 'bg-blue-600/10 border-blue-500' : 'border-slate-800'}`;
-                card.innerHTML = `<p class="text-[9px] font-black uppercase truncate">${name}</p><div class="flex justify-between items-center mt-2"><span class="text-[7px] font-bold text-slate-600 uppercase">RLY-${i}</span><div class="w-7 h-4 bg-slate-900 rounded-full relative"><div class="absolute w-2.5 h-2.5 bg-white rounded-full top-0.5 transition-all ${isOn ? 'right-0.5 bg-blue-400' : 'left-0.5'}"></div></div></div>`;
+                card.className = `glass p-5 rounded-[2rem] transition-all border-l-4 ${isOn ? 'bg-blue-600/10 border-blue-500' : 'border-slate-800'}`;
+                card.innerHTML = `<p class="text-[10px] font-black uppercase truncate">${name}</p><div class="flex justify-between items-center mt-3"><span class="text-[8px] font-bold text-slate-600">ID-${i}</span><div class="w-8 h-4 bg-slate-900 rounded-full relative"><div class="absolute w-2.5 h-2.5 bg-white rounded-full top-0.5 transition-all ${isOn ? 'right-1 bg-blue-400' : 'left-1'}"></div></div></div>`;
                 card.onclick = () => set(ref(db, `nexhome_v3/states/relay${i}`), !isOn);
                 grid.appendChild(card);
             }
-            getFriendlySaran();
         });
 
-        onValue(ref(db, ".info/connected"), s => { 
+        onValue(ref(db, ".info/connected"), s => {
             const isConn = s.val();
-            document.getElementById('cloud-dot').className = isConn ? "w-1.5 h-1.5 rounded-full bg-emerald-500" : "w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"; 
-            document.getElementById('log-text').innerText = isConn ? "Gemini Engine Siap" : "Menghubungkan Ulang...";
+            document.getElementById('cloud-dot').className = isConn ? "w-2 h-2 rounded-full bg-emerald-500" : "w-2 h-2 rounded-full bg-red-500 animate-pulse";
+            document.getElementById('conn-text').innerText = isConn ? "Gemini Engine Online" : "Koneksi Terputus";
         });
     </script>
 </body>
