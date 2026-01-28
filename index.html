@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NexHome Masdar V4.3.0</title>
+    <title>NexHome Masdar V4.3.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -31,7 +31,9 @@
             font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px;
             z-index: 1000; display: none; color: #0f172a; box-shadow: 0 10px 30px rgba(56,189,248,0.4);
         }
-        .eco-active { border-color: #10b981 !important; color: #10b981 !important; box-shadow: 0 0 15px rgba(16, 185, 129, 0.3); }
+
+        #modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); z-index: 300; display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+        #modal.active { display: flex; }
     </style>
 </head>
 <body class="flex flex-col">
@@ -44,8 +46,8 @@
             <div class="w-24 h-24 bg-blue-500/10 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 border border-blue-500/20 shadow-2xl">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             </div>
-            <h1 class="text-2xl font-extrabold tracking-tighter uppercase">NexHome Masdar</h1>
-            <p class="text-slate-500 text-[10px] mt-2 uppercase tracking-[0.3em] font-bold">V4.3.0 Smart Intelligence</p>
+            <h1 class="text-2xl font-extrabold tracking-tighter uppercase italic">NexHome <span class="text-blue-400">Masdar</span></h1>
+            <p class="text-slate-500 text-[10px] mt-2 uppercase tracking-[0.3em] font-bold">Smart Evolution V4.3.1</p>
         </div>
         
         <div class="flex mb-16">
@@ -65,83 +67,81 @@
         </div>
     </div>
 
+    <!-- Modal Pengaturan -->
+    <div id="modal">
+        <div class="glass w-[90%] max-w-sm p-8 rounded-[3rem] space-y-6">
+            <h2 class="text-xl font-black italic">Edit <span class="text-blue-400">Perangkat</span></h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-black text-slate-500 uppercase ml-2">Nama Perangkat</label>
+                    <input id="input-name" class="w-full bg-slate-800/50 border border-white/10 p-4 rounded-2xl mt-1 focus:outline-none focus:border-blue-500 font-bold">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase ml-2">Waktu Nyala</label>
+                        <input type="time" id="input-on" class="w-full bg-slate-800/50 border border-white/10 p-3 rounded-2xl mt-1 focus:outline-none focus:border-blue-500 font-bold">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase ml-2">Waktu Mati</label>
+                        <input type="time" id="input-off" class="w-full bg-slate-800/50 border border-white/10 p-3 rounded-2xl mt-1 focus:outline-none focus:border-blue-500 font-bold">
+                    </div>
+                </div>
+                <div class="flex items-center justify-between p-4 glass rounded-2xl">
+                    <span class="text-xs font-black uppercase">Jadwal Aktif</span>
+                    <input type="checkbox" id="check-schedule" class="w-5 h-5 accent-blue-500">
+                </div>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeModal()" class="flex-1 p-4 rounded-2xl bg-slate-800 text-xs font-black uppercase">Batal</button>
+                <button id="btn-save" class="flex-1 p-4 rounded-2xl bg-blue-600 text-xs font-black uppercase shadow-lg shadow-blue-500/20">Simpan</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Header -->
     <header class="p-6 flex justify-between items-center bg-slate-900/40 border-b border-white/5 backdrop-blur-md">
         <div>
             <h1 class="text-lg font-black italic">NexHome <span class="text-blue-400">Masdar</span></h1>
             <div class="flex items-center gap-2">
                 <div id="cloud-dot" class="w-2 h-2 rounded-full bg-red-500"></div>
-                <span class="text-[9px] font-bold text-slate-500 uppercase">System Active</span>
+                <span class="text-[9px] font-bold text-slate-500 uppercase">Blora Online</span>
             </div>
         </div>
-        <div class="flex items-center gap-4">
-            <button id="btn-eco" onclick="toggleEcoMode()" class="px-3 py-1.5 border border-white/10 rounded-full text-[9px] font-black uppercase transition-all">Mode Hemat</button>
-            <span id="clock" class="text-xl font-black tabular-nums">00:00</span>
-        </div>
+        <button id="btn-eco" onclick="toggleEcoMode()" class="px-3 py-1.5 border border-white/10 rounded-full text-[9px] font-black uppercase transition-all">Mode Hemat</button>
     </header>
 
     <!-- Dashboard -->
     <div id="tab-dashboard" class="tab-content active p-5 space-y-4 overflow-y-auto scrollbar-hide">
-        <!-- Main Stats -->
-        <div class="grid grid-cols-2 gap-3">
-            <div class="glass p-4 rounded-3xl">
-                <p class="text-[8px] font-bold text-slate-500 uppercase mb-2">Suhu & Lembab</p>
-                <div class="flex justify-between items-end">
-                    <p class="text-2xl font-black"><span id="temp">--</span>°</p>
-                    <p class="text-sm font-bold text-blue-400"><span id="hum">--</span>%</p>
-                </div>
+        <div class="grid grid-cols-3 gap-3">
+            <div class="glass p-3 rounded-3xl text-center">
+                <p class="text-[7px] font-black text-slate-500 uppercase">Suhu</p>
+                <p class="text-lg font-black italic"><span id="temp">--</span>°</p>
             </div>
-            <div class="glass p-4 rounded-3xl">
-                <p class="text-[8px] font-bold text-slate-500 uppercase mb-2">Kualitas Udara</p>
-                <div class="flex items-center gap-2">
-                    <div id="air-dot" class="w-3 h-3 rounded-full bg-emerald-500"></div>
-                    <p id="air-status" class="text-sm font-black uppercase">Baik</p>
-                </div>
-                <p class="text-[9px] text-slate-500 mt-1"><span id="air-val">--</span> PPM</p>
+            <div class="glass p-3 rounded-3xl text-center">
+                <p class="text-[7px] font-black text-slate-500 uppercase">Lembab</p>
+                <p class="text-lg font-black italic text-blue-400"><span id="hum">--</span>%</p>
+            </div>
+            <div class="glass p-3 rounded-3xl text-center">
+                <p class="text-[7px] font-black text-slate-500 uppercase">Udara</p>
+                <p id="air-status" class="text-[10px] font-black text-emerald-400">OK</p>
             </div>
         </div>
 
-        <!-- Water Level Card -->
-        <div class="glass p-4 rounded-[2.5rem] relative overflow-hidden h-32 flex flex-col justify-end">
-            <p class="text-[9px] font-black text-slate-500 uppercase absolute top-6 left-6 z-10">Kapasitas Tandon Air</p>
-            <div class="flex items-baseline gap-2 z-10 p-2">
-                <span id="water-val" class="text-4xl font-black italic">--</span>
-                <span class="text-blue-400 font-bold">%</span>
-            </div>
-            <div id="water-wave" class="absolute bottom-0 left-0 right-0 bg-blue-600/30 transition-all duration-1000" style="height: 0%"></div>
+        <div class="glass p-5 rounded-[2.5rem] relative overflow-hidden h-28 flex flex-col justify-end">
+            <p class="text-[8px] font-black text-slate-500 uppercase absolute top-6 left-6">Level Tandon</p>
+            <p class="text-4xl font-black italic z-10"><span id="water-val">--</span><span class="text-blue-400 text-lg ml-1">%</span></p>
+            <div id="water-wave" class="absolute bottom-0 left-0 right-0 bg-blue-600/20 transition-all duration-1000" style="height: 0%"></div>
         </div>
 
-        <!-- Quick Info -->
-        <div class="grid grid-cols-2 gap-3">
-            <div class="glass p-4 rounded-3xl flex items-center gap-3">
-                <div class="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                </div>
-                <div>
-                    <p class="text-[8px] font-bold text-slate-500 uppercase">Pintu</p>
-                    <p id="summary-door-text" class="text-[10px] font-black uppercase">Terkunci</p>
-                </div>
-            </div>
-            <div class="glass p-4 rounded-3xl flex items-center gap-3">
-                <div class="w-10 h-10 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-400">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
-                </div>
-                <div>
-                    <p class="text-[8px] font-bold text-slate-500 uppercase">Saklar ON</p>
-                    <p id="summary-switches" class="text-[10px] font-black uppercase">0 Unit</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Log Area -->
         <div class="glass p-5 rounded-[2.5rem]">
-            <p class="text-[9px] font-black text-slate-500 uppercase mb-3 tracking-widest">Aktivitas Sistem</p>
-            <div id="mini-log" class="text-[10px] space-y-2 text-slate-400 font-medium"></div>
+            <p class="text-[9px] font-black text-slate-500 uppercase mb-3 tracking-widest">Sistem Log</p>
+            <div id="mini-log" class="text-[10px] space-y-2 text-slate-400 font-medium h-20 overflow-hidden"></div>
         </div>
     </div>
 
     <!-- Controls -->
     <div id="tab-control" class="tab-content p-5">
+        <p class="text-[9px] font-black text-slate-500 uppercase mb-4 ml-2">Tekan lama untuk edit</p>
         <div id="grid-switches" class="grid grid-cols-2 gap-3 pb-24"></div>
     </div>
 
@@ -149,7 +149,7 @@
     <nav class="fixed bottom-0 left-0 right-0 glass h-20 flex items-center justify-around px-8 pb-4 z-50 rounded-t-[2.5rem] border-t border-white/5">
         <button onclick="switchTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center gap-1 text-blue-400">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
-            <span class="text-[8px] font-black uppercase">Beranda</span>
+            <span class="text-[8px] font-black uppercase">Home</span>
         </button>
         <button onclick="switchTab('control')" id="nav-control" class="flex flex-col items-center gap-1 text-slate-600">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="20" y1="21" x2="20" y2="16"></line></svg>
@@ -179,9 +179,10 @@
 
         let currentNames = {};
         let pinInput = "";
+        let currentEditingId = null;
         const CORRECT_PIN = "1234";
 
-        // Logic PIN
+        // PIN Login
         window.pressPin = (num) => {
             if(pinInput.length < 4) {
                 pinInput += num;
@@ -190,7 +191,7 @@
                     setTimeout(() => {
                         document.getElementById('login-screen').style.transform = 'translateY(-100%)';
                         document.getElementById('btn-voice').style.display = 'flex';
-                        speak("Sistem Masdar Aktif.");
+                        speak("Akses diterima. Sistem aktif.");
                     }, 300);
                 } else if(pinInput.length === 4) {
                     setTimeout(() => { pinInput = ""; for(let i=0; i<4; i++) document.getElementById(`dot-${i}`).className = 'pin-dot'; speak("Pin salah."); }, 200);
@@ -199,10 +200,36 @@
         };
         window.clearPin = () => { pinInput = ""; for(let i=0; i<4; i++) document.getElementById(`dot-${i}`).className = 'pin-dot'; };
 
+        // Modal Logic
+        window.openModal = (id, name, sched) => {
+            currentEditingId = id;
+            document.getElementById('input-name').value = name || `Saklar ${id}`;
+            document.getElementById('input-on').value = sched?.on || "18:00";
+            document.getElementById('input-off').value = sched?.off || "06:00";
+            document.getElementById('check-schedule').checked = sched?.active || false;
+            document.getElementById('modal').classList.add('active');
+        };
+        window.closeModal = () => document.getElementById('modal').classList.remove('active');
+
+        document.getElementById('btn-save').onclick = async () => {
+            const newName = document.getElementById('input-name').value;
+            const updates = {};
+            updates[`nexhome_v3/names/relay${currentEditingId}`] = newName;
+            updates[`nexhome_v3/schedules/relay${currentEditingId}`] = {
+                on: document.getElementById('input-on').value,
+                off: document.getElementById('input-off').value,
+                active: document.getElementById('check-schedule').checked
+            };
+            await update(ref(db), updates);
+            closeModal();
+            logMini(`Pengaturan ${newName} disimpan.`);
+            speak(`Pengaturan ${newName} telah diperbarui.`);
+        };
+
         // VOICE ENGINE
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const recognition = SpeechRecognition ? new SpeechRecognition() : null;
-        if (recognition) { recognition.lang = 'id-ID'; recognition.interimResults = false; }
+        if (recognition) { recognition.lang = 'id-ID'; }
 
         function speak(text) {
             window.speechSynthesis.cancel();
@@ -213,109 +240,72 @@
         }
 
         const micBtn = document.getElementById('btn-voice');
-        const overlay = document.getElementById('voice-overlay');
-
         micBtn.onclick = () => {
-            if (!recognition) { speak("Suara tidak didukung."); return; }
-            try { recognition.start(); micBtn.classList.add('mic-active'); overlay.style.display = 'block'; } catch(e) { recognition.stop(); }
+            try { recognition.start(); micBtn.classList.add('mic-active'); document.getElementById('voice-overlay').style.display='block'; } catch(e) { recognition.stop(); }
         };
 
         if (recognition) {
-            recognition.onresult = (event) => {
-                const cmd = event.results[0][0].transcript.toLowerCase();
-                processCmd(cmd);
-            };
-            recognition.onend = () => { micBtn.classList.remove('mic-active'); overlay.style.display = 'none'; };
+            recognition.onresult = (e) => processCmd(e.results[0][0].transcript.toLowerCase());
+            recognition.onend = () => { micBtn.classList.remove('mic-active'); document.getElementById('voice-overlay').style.display='none'; };
         }
 
         function processCmd(cmd) {
-            console.log("Suara:", cmd);
+            console.log("CMD:", cmd);
             const numMap = { 'satu': 1, '1': 1, 'dua': 2, '2': 2, 'tiga': 3, '3': 3, 'empat': 4, '4': 4, 'lima': 5, '5': 5, 'enam': 6, '6': 6, 'tujuh': 7, '7': 7, 'delapan': 8, '8': 8 };
             
-            // 1. DYNAMIC NAME MATCHING (Sanyo, TV, etc)
-            let handled = false;
+            // 1. VOID SCHEDULE CONTROL
+            if (cmd.includes('jadwal')) {
+                const isActive = cmd.includes('aktif') || cmd.includes('nyala') || cmd.includes('hidup');
+                const isDeactive = cmd.includes('mati') || cmd.includes('nonaktif') || cmd.includes('matikan');
+                
+                for (let i = 1; i <= 8; i++) {
+                    const name = (currentNames[`relay${i}`] || "").toLowerCase();
+                    if (cmd.includes(name) || (cmd.includes('saklar') && cmd.includes(i.toString()))) {
+                        update(ref(db, `nexhome_v3/schedules/relay${i}`), { active: isActive });
+                        speak(`Jadwal ${name || 'saklar '+i} telah ${isActive ? 'diaktifkan' : 'dimatikan'}.`);
+                        return;
+                    }
+                }
+            }
+
+            // 2. DYNAMIC NAME/RELAY CONTROL
             for (let i = 1; i <= 8; i++) {
-                const nameInDb = (currentNames[`relay${i}`] || "").toLowerCase();
-                const isAction = cmd.includes('nyala') || cmd.includes('hidup') || cmd.includes('aktif') || cmd.includes('buka');
-                const isOff = cmd.includes('mati') || cmd.includes('padam') || cmd.includes('tutup') || cmd.includes('nonaktif');
+                const name = (currentNames[`relay${i}`] || "").toLowerCase();
+                const isOn = cmd.includes('nyala') || cmd.includes('hidup') || cmd.includes('aktif');
+                const isOff = cmd.includes('mati') || cmd.includes('padam') || cmd.includes('tutup');
 
-                if (nameInDb && cmd.includes(nameInDb)) {
-                    if (isAction) {
-                        set(ref(db, `nexhome_v3/states/relay${i}`), true);
-                        speak(`${nameInDb} dinyalakan.`);
-                        handled = true; break;
-                    } else if (isOff) {
-                        set(ref(db, `nexhome_v3/states/relay${i}`), false);
-                        speak(`${nameInDb} dimatikan.`);
-                        handled = true; break;
-                    }
+                if ((name && cmd.includes(name)) || (cmd.includes('saklar') && (cmd.includes(i.toString()) || cmd.includes(Object.keys(numMap).find(k => numMap[k] === i))))) {
+                    set(ref(db, `nexhome_v3/states/relay${i}`), isOn);
+                    speak(`${name || 'Saklar '+i} ${isOn ? 'dinyalakan' : 'dimatikan'}.`);
+                    return;
                 }
             }
 
-            if (handled) return;
-
-            // 2. GENERIC SAKLAR/LAMPU MATCHING
-            if (cmd.includes('lampu') || cmd.includes('saklar')) {
-                for (let key in numMap) {
-                    if (cmd.includes(key)) {
-                        const relayId = numMap[key];
-                        const state = cmd.includes('nyala') || cmd.includes('hidup') || cmd.includes('aktif');
-                        set(ref(db, `nexhome_v3/states/relay${relayId}`), state);
-                        speak(`Saklar ${key} ${state ? 'dinyalakan' : 'dimatikan'}.`);
-                        handled = true; break;
-                    }
-                }
-            }
-
-            if (handled) return;
-
-            // 3. GLOBAL COMMANDS
+            // 3. GLOBAL & SENSORS
             if (cmd.includes('semua')) {
                 const state = cmd.includes('nyala') || cmd.includes('hidup');
                 const updates = {};
                 for(let i=1; i<=8; i++) updates[`nexhome_v3/states/relay${i}`] = state;
                 update(ref(db), updates);
                 speak(`Semua peralatan ${state ? 'dinyalakan' : 'dimatikan'}.`);
-                return;
-            }
-
-            if (cmd.includes('hemat') || cmd.includes('ekonomi')) {
-                toggleEcoMode(true);
-                speak("Mode hemat diaktifkan. Semua saklar dimatikan.");
-                return;
-            }
-
-            // 4. SENSORS & PINTU
-            if (cmd.includes('pintu')) {
+            } else if (cmd.includes('pintu')) {
                 const state = cmd.includes('buka');
                 set(ref(db, `nexhome_v3/states/door`), state);
                 speak(`Pintu ${state ? 'dibuka' : 'dikunci'}.`);
             } else if (cmd.includes('suhu')) {
                 speak(`Suhu saat ini ${document.getElementById('temp').innerText} derajat.`);
-            } else if (cmd.includes('lembab')) {
-                speak(`Kelembaban ${document.getElementById('hum').innerText} persen.`);
             } else if (cmd.includes('air')) {
                 speak(`Kapasitas air ${document.getElementById('water-val').innerText} persen.`);
-            } else if (cmd.includes('udara')) {
-                speak(`Kualitas udara ${document.getElementById('air-status').innerText} dengan nilai ${document.getElementById('air-val').innerText} PPM.`);
             } else {
-                speak("Maaf, saya tidak mengerti perintah itu.");
+                speak("Perintah tidak dikenali.");
             }
         }
 
-        window.toggleEcoMode = (forceOn = false) => {
-            const btn = document.getElementById('btn-eco');
-            const isActive = forceOn || !btn.classList.contains('eco-active');
-            
-            if (isActive) {
-                btn.classList.add('eco-active');
-                const updates = {};
-                for(let i=1; i<=8; i++) updates[`nexhome_v3/states/relay${i}`] = false;
-                update(ref(db), updates);
-                logMini("Eco Mode: Semua Saklar OFF");
-            } else {
-                btn.classList.remove('eco-active');
-            }
+        window.toggleEcoMode = () => {
+            const updates = {};
+            for(let i=1; i<=8; i++) updates[`nexhome_v3/states/relay${i}`] = false;
+            update(ref(db), updates);
+            speak("Mode hemat aktif. Semua saklar dimatikan.");
         };
 
         window.switchTab = (id) => {
@@ -328,69 +318,51 @@
         function logMini(msg) {
             const el = document.getElementById('mini-log');
             el.innerHTML = `<div class="bg-white/5 p-2 rounded-xl border-l-2 border-blue-500 fade-in">${msg}</div>` + el.innerHTML;
-            if(el.children.length > 3) el.removeChild(el.lastChild);
         }
 
         onValue(rootRef, snap => {
             const data = snap.val();
             if(!data) return;
 
-            // Update Sensors
             document.getElementById('temp').innerText = data.sensors?.temperature ?? "--";
             document.getElementById('hum').innerText = data.sensors?.humidity ?? "--";
-            
-            // Kualitas Udara (Mock logic or use data.sensors.air_quality if exists)
-            const air = data.sensors?.air_quality ?? 45;
-            document.getElementById('air-val').innerText = air;
-            const airStat = document.getElementById('air-status');
-            const airDot = document.getElementById('air-dot');
-            if(air < 100) { airStat.innerText = "BAIK"; airDot.className = "w-3 h-3 rounded-full bg-emerald-500"; }
-            else if(air < 300) { airStat.innerText = "SEDANG"; airDot.className = "w-3 h-3 rounded-full bg-orange-500"; }
-            else { airStat.innerText = "BURUK"; airDot.className = "w-3 h-3 rounded-full bg-red-500"; }
-
-            // Water
             const water = data.sensors?.water_level ?? 0;
             document.getElementById('water-val').innerText = water;
             document.getElementById('water-wave').style.height = `${water}%`;
             
-            document.getElementById('summary-door-text').innerText = data.states?.door ? "Terbuka" : "Terkunci";
-
-            // Update Names for Voice
             currentNames = data.names || {};
 
-            // Render Switches
             const grid = document.getElementById('grid-switches');
             grid.innerHTML = '';
-            let activeCount = 0;
             for(let i=1; i<=8; i++){
                 const isOn = data.states?.[`relay${i}`] === true;
-                if(isOn) activeCount++;
                 const name = data.names?.[`relay${i}`] || `Saklar ${i}`;
+                const sched = data.schedules?.[`relay${i}`];
                 const card = document.createElement('div');
-                card.className = `glass p-4 rounded-3xl transition-all ${isOn ? 'border-blue-500/50 bg-blue-500/10' : ''}`;
+                card.className = `glass p-4 rounded-[2rem] transition-all relative overflow-hidden ${isOn ? 'bg-blue-600/10 border-blue-500/30' : ''}`;
                 card.innerHTML = `
-                    <p class="text-[10px] font-black uppercase mb-1">${name}</p>
-                    <div class="flex justify-between items-center">
-                        <span class="text-[8px] font-bold ${isOn ? 'text-blue-400' : 'text-slate-600'}">${isOn ? 'AKTIF' : 'OFF'}</span>
+                    <p class="text-[9px] font-black uppercase mb-1">${name}</p>
+                    <div class="flex justify-between items-end">
+                        <span class="text-[7px] font-bold text-slate-500">${sched?.active ? 'SCHED: ON' : 'SCHED: OFF'}</span>
                         <div class="w-8 h-4 bg-slate-800 rounded-full relative">
                             <div class="absolute w-3 h-3 bg-white rounded-full top-0.5 transition-all ${isOn ? 'right-0.5 bg-blue-400' : 'left-0.5'}"></div>
                         </div>
                     </div>
                 `;
+                
+                // Click to Toggle
                 card.onclick = () => set(ref(db, `nexhome_v3/states/relay${i}`), !isOn);
+                
+                // Long Press to Edit
+                let timer;
+                card.onmousedown = card.ontouchstart = () => { timer = setTimeout(() => openModal(i, name, sched), 800); };
+                card.onmouseup = card.onmouseleave = card.ontouchend = () => { clearTimeout(timer); };
+                
                 grid.appendChild(card);
             }
-            document.getElementById('summary-switches').innerText = `${activeCount} Unit`;
         });
 
-        setInterval(() => { 
-            const now = new Date();
-            document.getElementById('clock').innerText = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-        }, 1000);
-
-        onValue(ref(db, ".info/connected"), s => { 
-            document.getElementById('cloud-dot').className = s.val() ? "w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" : "w-2 h-2 rounded-full bg-red-500 animate-pulse"; 
-        });
+        onValue(ref(db, ".info/connected"), s => { document.getElementById('cloud-dot').className = s.val() ? "w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" : "w-2 h-2 rounded-full bg-red-500 animate-pulse"; });
     </script>
 </body>
 </html>
