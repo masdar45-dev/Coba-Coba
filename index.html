@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NexHome Masdar V4.2.6</title>
+    <title>NexHome Masdar V4.2.7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -35,7 +35,7 @@
 </head>
 <body class="flex flex-col">
 
-    <div id="voice-overlay">Mendengarkan Perintah...</div>
+    <div id="voice-overlay">Mendengarkan...</div>
 
     <!-- Login Screen -->
     <div id="login-screen">
@@ -43,8 +43,8 @@
             <div class="w-24 h-24 bg-blue-500/10 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 border border-blue-500/20 shadow-2xl">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             </div>
-            <h1 class="text-2xl font-extrabold tracking-tighter">NEXHOME MASDAR</h1>
-            <p class="text-slate-500 text-[10px] mt-2 uppercase tracking-[0.3em] font-bold italic">Secure Voice Enabled</p>
+            <h1 class="text-2xl font-extrabold tracking-tighter uppercase">NexHome Masdar</h1>
+            <p class="text-slate-500 text-[10px] mt-2 uppercase tracking-[0.3em] font-bold italic">Secure Environment</p>
         </div>
         
         <div class="flex mb-16">
@@ -78,7 +78,7 @@
         </div>
     </header>
 
-    <!-- Tab Contents -->
+    <!-- Dashboard -->
     <div id="tab-dashboard" class="tab-content active p-5 space-y-4 overflow-y-auto scrollbar-hide">
         <div class="grid grid-cols-2 gap-3">
             <div class="glass p-4 rounded-3xl flex items-center gap-3">
@@ -95,7 +95,7 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                 </div>
                 <div>
-                    <p class="text-[8px] font-bold text-slate-500 uppercase">Pintu</p>
+                    <p class="text-[8px] font-bold text-slate-500 uppercase">Status Pintu</p>
                     <p id="summary-door-text" class="text-xs font-black uppercase">Terkunci</p>
                 </div>
             </div>
@@ -103,7 +103,7 @@
 
         <div class="grid grid-cols-2 gap-3">
             <div class="glass p-4 rounded-[2rem]">
-                <p class="text-[9px] font-bold text-slate-500 uppercase">Suhu</p>
+                <p class="text-[9px] font-bold text-slate-500 uppercase">Suhu Ruang</p>
                 <p class="text-2xl font-black mt-1"><span id="temp">--</span><span class="text-orange-400 text-xs ml-1">°C</span></p>
             </div>
             <div class="glass p-4 rounded-[2rem]">
@@ -113,11 +113,12 @@
         </div>
 
         <div class="glass p-5 rounded-[2.5rem]">
-            <p class="text-[9px] font-black text-slate-500 uppercase mb-3 tracking-widest">Aktivitas Terakhir</p>
+            <p class="text-[9px] font-black text-slate-500 uppercase mb-3 tracking-widest">Aktivitas Suara</p>
             <div id="mini-log" class="text-[10px] space-y-2 text-slate-400 font-medium"></div>
         </div>
     </div>
 
+    <!-- Controls -->
     <div id="tab-control" class="tab-content p-5 space-y-4">
         <div id="grid-switches" class="grid grid-cols-2 gap-3 pb-24"></div>
     </div>
@@ -126,7 +127,7 @@
     <nav class="fixed bottom-0 left-0 right-0 glass h-20 flex items-center justify-around px-8 pb-4 z-50 rounded-t-[2.5rem] border-t border-white/5">
         <button onclick="switchTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center gap-1 text-blue-400">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
-            <span class="text-[8px] font-black uppercase">Dashboard</span>
+            <span class="text-[8px] font-black uppercase">Home</span>
         </button>
         <button onclick="switchTab('control')" id="nav-control" class="flex flex-col items-center gap-1 text-slate-600">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="20" y1="21" x2="20" y2="16"></line></svg>
@@ -134,7 +135,7 @@
         </button>
     </nav>
 
-    <!-- Floating Voice Button -->
+    <!-- Voice Button -->
     <button id="btn-voice" class="fixed bottom-24 right-6 w-16 h-16 bg-blue-600 rounded-full hidden items-center justify-center shadow-2xl z-[100] active:scale-95 transition-all border-4 border-slate-900">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
             <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
@@ -170,7 +171,7 @@
                     setTimeout(() => {
                         document.getElementById('login-screen').style.transform = 'translateY(-100%)';
                         document.getElementById('btn-voice').style.display = 'flex';
-                        speak("Akses diterima. Sistem siap.");
+                        speak("Akses diterima. Selamat datang.");
                     }, 300);
                 } else if(pinInput.length === 4) {
                     setTimeout(() => { pinInput = ""; for(let i=0; i<4; i++) document.getElementById(`dot-${i}`).className = 'pin-dot'; speak("Pin salah."); }, 200);
@@ -182,7 +183,6 @@
         // VOICE ENGINE
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const recognition = SpeechRecognition ? new SpeechRecognition() : null;
-        
         if (recognition) {
             recognition.lang = 'id-ID';
             recognition.interimResults = false;
@@ -200,17 +200,8 @@
         const overlay = document.getElementById('voice-overlay');
 
         micBtn.onclick = () => {
-            if (!recognition) {
-                speak("Maaf, browser ini tidak mendukung pengenalan suara.");
-                return;
-            }
-            try {
-                recognition.start();
-                micBtn.classList.add('mic-active');
-                overlay.style.display = 'block';
-            } catch(e) {
-                recognition.stop();
-            }
+            if (!recognition) { speak("Pengenalan suara tidak didukung."); return; }
+            try { recognition.start(); micBtn.classList.add('mic-active'); overlay.style.display = 'block'; } catch(e) { recognition.stop(); }
         };
 
         if (recognition) {
@@ -218,45 +209,64 @@
                 const cmd = event.results[0][0].transcript.toLowerCase();
                 processCmd(cmd);
             };
-            recognition.onend = () => {
-                micBtn.classList.remove('mic-active');
-                overlay.style.display = 'none';
-            };
-            recognition.onerror = (e) => {
-                console.error("Speech Error:", e.error);
-                if(e.error === 'not-allowed') speak("Akses mikrofon ditolak. Cek izin browser.");
-            };
+            recognition.onend = () => { micBtn.classList.remove('mic-active'); overlay.style.display = 'none'; };
         }
 
         function processCmd(cmd) {
-            logMini("Suara: " + cmd);
-            const numbers = { 'satu': 1, 'dua': 2, 'tiga': 3, 'empat': 4, 'lima': 5, 'enam': 6, 'tujuh': 7, 'delapan': 8 };
-            let found = false;
+            console.log("Diterima:", cmd);
+            const numMap = { 
+                'satu': 1, '1': 1, 'dua': 2, '2': 2, 'tiga': 3, '3': 3, 'empat': 4, '4': 4, 
+                'lima': 5, '5': 5, 'enam': 6, '6': 6, 'tujuh': 7, '7': 7, 'delapan': 8, '8': 8 
+            };
+            
+            let handled = false;
 
-            for (let word in numbers) {
-                if (cmd.includes(`nyalakan lampu ${word}`) || cmd.includes(`hidupkan lampu ${word}`)) {
-                    set(ref(db, `nexhome_v3/states/relay${numbers[word]}`), true);
-                    speak(`Lampu ${word} dinyalakan.`);
-                    found = true; break;
-                }
-                if (cmd.includes(`matikan lampu ${word}`)) {
-                    set(ref(db, `nexhome_v3/states/relay${numbers[word]}`), false);
-                    speak(`Lampu ${word} dimatikan.`);
-                    found = true; break;
+            // Global Control: Semua Lampu
+            if (cmd.includes('nyalakan semua') || cmd.includes('hidupkan semua')) {
+                const updates = {};
+                for(let i=1; i<=8; i++) updates[`nexhome_v3/states/relay${i}`] = true;
+                update(ref(db), updates);
+                speak("Semua lampu dinyalakan.");
+                return;
+            }
+            if (cmd.includes('matikan semua') || cmd.includes('padamkan semua')) {
+                const updates = {};
+                for(let i=1; i<=8; i++) updates[`nexhome_v3/states/relay${i}`] = false;
+                update(ref(db), updates);
+                speak("Semua lampu dimatikan.");
+                return;
+            }
+
+            // Individual Control: Lampu 1-8
+            for (let key in numMap) {
+                if (cmd.includes(`lampu ${key}`)) {
+                    const relayId = numMap[key];
+                    const isOn = cmd.includes('nyala') || cmd.includes('hidup') || cmd.includes('aktif');
+                    const isOff = cmd.includes('mati') || cmd.includes('padam') || cmd.includes('nonaktif');
+                    
+                    if (isOn) {
+                        set(ref(db, `nexhome_v3/states/relay${relayId}`), true);
+                        speak(`Lampu ${key} dinyalakan.`);
+                        handled = true; break;
+                    } else if (isOff) {
+                        set(ref(db, `nexhome_v3/states/relay${relayId}`), false);
+                        speak(`Lampu ${key} dimatikan.`);
+                        handled = true; break;
+                    }
                 }
             }
 
-            if(!found) {
+            if (!handled) {
                 if (cmd.includes('buka pintu')) {
                     set(ref(db, `nexhome_v3/states/door`), true);
                     speak("Pintu dibuka.");
                 } else if (cmd.includes('kunci pintu')) {
                     set(ref(db, `nexhome_v3/states/door`), false);
                     speak("Pintu dikunci.");
-                } else if (cmd.includes('berapa suhu')) {
-                    speak(`Suhu saat ini adalah ${document.getElementById('temp').innerText} derajat.`);
+                } else if (cmd.includes('suhu')) {
+                    speak(`Suhu saat ini ${document.getElementById('temp').innerText} derajat.`);
                 } else {
-                    speak("Perintah tidak dikenali.");
+                    speak("Perintah tidak dimengerti.");
                 }
             }
         }
@@ -279,9 +289,7 @@
             if(!data) return;
             document.getElementById('temp').innerText = data.sensors?.temperature ?? "--";
             document.getElementById('water-val').innerText = data.sensors?.water_level ?? "--";
-            
-            const doorOpen = data.states?.door === true;
-            document.getElementById('summary-door-text').innerText = doorOpen ? "Terbuka" : "Terkunci";
+            document.getElementById('summary-door-text').innerText = data.states?.door ? "Terbuka" : "Terkunci";
 
             const grid = document.getElementById('grid-switches');
             grid.innerHTML = '';
@@ -291,7 +299,7 @@
                 if(isOn) active++;
                 const card = document.createElement('div');
                 card.className = `glass p-4 rounded-2xl ${isOn ? 'bg-blue-500/10 border-blue-500/40' : ''}`;
-                card.innerHTML = `<p class="text-[10px] font-bold">${data.names?.[`relay${i}`] || 'Saklar '+i}</p><p class="text-[8px] mt-1 ${isOn?'text-blue-400':'text-slate-500'}">${isOn?'AKTIF':'OFF'}</p>`;
+                card.innerHTML = `<p class="text-[10px] font-bold">${data.names?.[`relay${i}`] || 'Lampu '+i}</p><p class="text-[8px] mt-1 ${isOn?'text-blue-400':'text-slate-500'}">${isOn?'ON':'OFF'}</p>`;
                 card.onclick = () => set(ref(db, `nexhome_v3/states/relay${i}`), !isOn);
                 grid.appendChild(card);
             }
