@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NexHome Masdar V4.2.8</title>
+    <title>NexHome Masdar V4.3.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -31,6 +31,7 @@
             font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px;
             z-index: 1000; display: none; color: #0f172a; box-shadow: 0 10px 30px rgba(56,189,248,0.4);
         }
+        .eco-active { border-color: #10b981 !important; color: #10b981 !important; box-shadow: 0 0 15px rgba(16, 185, 129, 0.3); }
     </style>
 </head>
 <body class="flex flex-col">
@@ -44,7 +45,7 @@
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             </div>
             <h1 class="text-2xl font-extrabold tracking-tighter uppercase">NexHome Masdar</h1>
-            <p class="text-slate-500 text-[10px] mt-2 uppercase tracking-[0.3em] font-bold">Secure Voice System</p>
+            <p class="text-slate-500 text-[10px] mt-2 uppercase tracking-[0.3em] font-bold">V4.3.0 Smart Intelligence</p>
         </div>
         
         <div class="flex mb-16">
@@ -70,62 +71,77 @@
             <h1 class="text-lg font-black italic">NexHome <span class="text-blue-400">Masdar</span></h1>
             <div class="flex items-center gap-2">
                 <div id="cloud-dot" class="w-2 h-2 rounded-full bg-red-500"></div>
-                <span class="text-[9px] font-bold text-slate-500 uppercase">Blora, Jawa Tengah</span>
+                <span class="text-[9px] font-bold text-slate-500 uppercase">System Active</span>
             </div>
         </div>
-        <div class="text-right">
-            <span id="clock" class="text-xl font-black tabular-nums">00:00:00</span>
+        <div class="flex items-center gap-4">
+            <button id="btn-eco" onclick="toggleEcoMode()" class="px-3 py-1.5 border border-white/10 rounded-full text-[9px] font-black uppercase transition-all">Mode Hemat</button>
+            <span id="clock" class="text-xl font-black tabular-nums">00:00</span>
         </div>
     </header>
 
     <!-- Dashboard -->
     <div id="tab-dashboard" class="tab-content active p-5 space-y-4 overflow-y-auto scrollbar-hide">
+        <!-- Main Stats -->
         <div class="grid grid-cols-2 gap-3">
-            <div class="glass p-4 rounded-3xl flex items-center gap-3">
-                <div class="w-10 h-10 rounded-2xl bg-blue-500/20 flex items-center justify-center text-blue-400">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect><polyline points="17 2 12 7 7 2"></polyline></svg>
-                </div>
-                <div>
-                    <p class="text-[8px] font-bold text-slate-500 uppercase">Saklar Aktif</p>
-                    <p id="summary-switches" class="text-sm font-black">0</p>
+            <div class="glass p-4 rounded-3xl">
+                <p class="text-[8px] font-bold text-slate-500 uppercase mb-2">Suhu & Lembab</p>
+                <div class="flex justify-between items-end">
+                    <p class="text-2xl font-black"><span id="temp">--</span>°</p>
+                    <p class="text-sm font-bold text-blue-400"><span id="hum">--</span>%</p>
                 </div>
             </div>
+            <div class="glass p-4 rounded-3xl">
+                <p class="text-[8px] font-bold text-slate-500 uppercase mb-2">Kualitas Udara</p>
+                <div class="flex items-center gap-2">
+                    <div id="air-dot" class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                    <p id="air-status" class="text-sm font-black uppercase">Baik</p>
+                </div>
+                <p class="text-[9px] text-slate-500 mt-1"><span id="air-val">--</span> PPM</p>
+            </div>
+        </div>
+
+        <!-- Water Level Card -->
+        <div class="glass p-4 rounded-[2.5rem] relative overflow-hidden h-32 flex flex-col justify-end">
+            <p class="text-[9px] font-black text-slate-500 uppercase absolute top-6 left-6 z-10">Kapasitas Tandon Air</p>
+            <div class="flex items-baseline gap-2 z-10 p-2">
+                <span id="water-val" class="text-4xl font-black italic">--</span>
+                <span class="text-blue-400 font-bold">%</span>
+            </div>
+            <div id="water-wave" class="absolute bottom-0 left-0 right-0 bg-blue-600/30 transition-all duration-1000" style="height: 0%"></div>
+        </div>
+
+        <!-- Quick Info -->
+        <div class="grid grid-cols-2 gap-3">
             <div class="glass p-4 rounded-3xl flex items-center gap-3">
-                <div class="w-10 h-10 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <div class="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                 </div>
                 <div>
                     <p class="text-[8px] font-bold text-slate-500 uppercase">Pintu</p>
-                    <p id="summary-door-text" class="text-xs font-black uppercase">Terkunci</p>
+                    <p id="summary-door-text" class="text-[10px] font-black uppercase">Terkunci</p>
+                </div>
+            </div>
+            <div class="glass p-4 rounded-3xl flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-400">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
+                </div>
+                <div>
+                    <p class="text-[8px] font-bold text-slate-500 uppercase">Saklar ON</p>
+                    <p id="summary-switches" class="text-[10px] font-black uppercase">0 Unit</p>
                 </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
-            <div class="glass p-4 rounded-[2rem]">
-                <p class="text-[9px] font-bold text-slate-500 uppercase">Suhu</p>
-                <p class="text-2xl font-black mt-1"><span id="temp">--</span><span class="text-orange-400 text-xs ml-1">°C</span></p>
-            </div>
-            <div class="glass p-4 rounded-[2rem]">
-                <p class="text-[9px] font-bold text-slate-500 uppercase">Lembab</p>
-                <p class="text-2xl font-black mt-1"><span id="hum">--</span><span class="text-blue-400 text-xs ml-1">%</span></p>
-            </div>
-        </div>
-
-        <div class="glass p-4 rounded-[2rem] flex flex-col items-center justify-center relative overflow-hidden h-24">
-            <p class="text-[9px] font-bold text-slate-500 uppercase absolute top-4 left-4">Level Air</p>
-            <p class="text-3xl font-black z-10"><span id="water-val">--</span><span class="text-blue-400 text-sm ml-1">%</span></p>
-            <div id="water-bar-bg" class="absolute bottom-0 left-0 right-0 bg-blue-500/20 transition-all duration-1000" style="height: 0%"></div>
-        </div>
-
+        <!-- Log Area -->
         <div class="glass p-5 rounded-[2.5rem]">
-            <p class="text-[9px] font-black text-slate-500 uppercase mb-3 tracking-widest">Aktivitas Suara</p>
+            <p class="text-[9px] font-black text-slate-500 uppercase mb-3 tracking-widest">Aktivitas Sistem</p>
             <div id="mini-log" class="text-[10px] space-y-2 text-slate-400 font-medium"></div>
         </div>
     </div>
 
     <!-- Controls -->
-    <div id="tab-control" class="tab-content p-5 space-y-4">
+    <div id="tab-control" class="tab-content p-5">
         <div id="grid-switches" class="grid grid-cols-2 gap-3 pb-24"></div>
     </div>
 
@@ -133,7 +149,7 @@
     <nav class="fixed bottom-0 left-0 right-0 glass h-20 flex items-center justify-around px-8 pb-4 z-50 rounded-t-[2.5rem] border-t border-white/5">
         <button onclick="switchTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center gap-1 text-blue-400">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
-            <span class="text-[8px] font-black uppercase">Home</span>
+            <span class="text-[8px] font-black uppercase">Beranda</span>
         </button>
         <button onclick="switchTab('control')" id="nav-control" class="flex flex-col items-center gap-1 text-slate-600">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="20" y1="21" x2="20" y2="16"></line></svg>
@@ -143,11 +159,7 @@
 
     <!-- Voice Button -->
     <button id="btn-voice" class="fixed bottom-24 right-6 w-16 h-16 bg-blue-600 rounded-full hidden items-center justify-center shadow-2xl z-[100] active:scale-95 transition-all border-4 border-slate-900">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
-            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-            <line x1="12" y1="19" x2="12" y2="23"></line>
-        </svg>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>
     </button>
 
     <script type="module">
@@ -165,10 +177,11 @@
         const db = getDatabase(app);
         const rootRef = ref(db, "nexhome_v3");
 
+        let currentNames = {};
         let pinInput = "";
         const CORRECT_PIN = "1234";
 
-        // PIN Login
+        // Logic PIN
         window.pressPin = (num) => {
             if(pinInput.length < 4) {
                 pinInput += num;
@@ -177,7 +190,7 @@
                     setTimeout(() => {
                         document.getElementById('login-screen').style.transform = 'translateY(-100%)';
                         document.getElementById('btn-voice').style.display = 'flex';
-                        speak("Akses diterima. Selamat datang di NexHome Masdar.");
+                        speak("Sistem Masdar Aktif.");
                     }, 300);
                 } else if(pinInput.length === 4) {
                     setTimeout(() => { pinInput = ""; for(let i=0; i<4; i++) document.getElementById(`dot-${i}`).className = 'pin-dot'; speak("Pin salah."); }, 200);
@@ -189,10 +202,7 @@
         // VOICE ENGINE
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const recognition = SpeechRecognition ? new SpeechRecognition() : null;
-        if (recognition) {
-            recognition.lang = 'id-ID';
-            recognition.interimResults = false;
-        }
+        if (recognition) { recognition.lang = 'id-ID'; recognition.interimResults = false; }
 
         function speak(text) {
             window.speechSynthesis.cancel();
@@ -206,7 +216,7 @@
         const overlay = document.getElementById('voice-overlay');
 
         micBtn.onclick = () => {
-            if (!recognition) { speak("Browser tidak mendukung suara."); return; }
+            if (!recognition) { speak("Suara tidak didukung."); return; }
             try { recognition.start(); micBtn.classList.add('mic-active'); overlay.style.display = 'block'; } catch(e) { recognition.stop(); }
         };
 
@@ -219,63 +229,94 @@
         }
 
         function processCmd(cmd) {
-            console.log("Perintah Suara:", cmd);
+            console.log("Suara:", cmd);
             const numMap = { 'satu': 1, '1': 1, 'dua': 2, '2': 2, 'tiga': 3, '3': 3, 'empat': 4, '4': 4, 'lima': 5, '5': 5, 'enam': 6, '6': 6, 'tujuh': 7, '7': 7, 'delapan': 8, '8': 8 };
             
-            // 1. KONTROL SEMUA LAMPU
-            if (cmd.includes('semua lampu')) {
-                const state = cmd.includes('nyala') || cmd.includes('hidup') || cmd.includes('aktif');
+            // 1. DYNAMIC NAME MATCHING (Sanyo, TV, etc)
+            let handled = false;
+            for (let i = 1; i <= 8; i++) {
+                const nameInDb = (currentNames[`relay${i}`] || "").toLowerCase();
+                const isAction = cmd.includes('nyala') || cmd.includes('hidup') || cmd.includes('aktif') || cmd.includes('buka');
+                const isOff = cmd.includes('mati') || cmd.includes('padam') || cmd.includes('tutup') || cmd.includes('nonaktif');
+
+                if (nameInDb && cmd.includes(nameInDb)) {
+                    if (isAction) {
+                        set(ref(db, `nexhome_v3/states/relay${i}`), true);
+                        speak(`${nameInDb} dinyalakan.`);
+                        handled = true; break;
+                    } else if (isOff) {
+                        set(ref(db, `nexhome_v3/states/relay${i}`), false);
+                        speak(`${nameInDb} dimatikan.`);
+                        handled = true; break;
+                    }
+                }
+            }
+
+            if (handled) return;
+
+            // 2. GENERIC SAKLAR/LAMPU MATCHING
+            if (cmd.includes('lampu') || cmd.includes('saklar')) {
+                for (let key in numMap) {
+                    if (cmd.includes(key)) {
+                        const relayId = numMap[key];
+                        const state = cmd.includes('nyala') || cmd.includes('hidup') || cmd.includes('aktif');
+                        set(ref(db, `nexhome_v3/states/relay${relayId}`), state);
+                        speak(`Saklar ${key} ${state ? 'dinyalakan' : 'dimatikan'}.`);
+                        handled = true; break;
+                    }
+                }
+            }
+
+            if (handled) return;
+
+            // 3. GLOBAL COMMANDS
+            if (cmd.includes('semua')) {
+                const state = cmd.includes('nyala') || cmd.includes('hidup');
                 const updates = {};
                 for(let i=1; i<=8; i++) updates[`nexhome_v3/states/relay${i}`] = state;
                 update(ref(db), updates);
-                speak(`Semua lampu telah ${state ? 'dinyalakan' : 'dimatikan'}.`);
+                speak(`Semua peralatan ${state ? 'dinyalakan' : 'dimatikan'}.`);
                 return;
             }
 
-            // 2. KONTROL INDIVIDU LAMPU
-            for (let key in numMap) {
-                if (cmd.includes(`lampu ${key}`)) {
-                    const relayId = numMap[key];
-                    const state = cmd.includes('nyala') || cmd.includes('hidup') || cmd.includes('aktif');
-                    set(ref(db, `nexhome_v3/states/relay${relayId}`), state);
-                    speak(`Lampu ${key} ${state ? 'dinyalakan' : 'dimatikan'}.`);
-                    return;
-                }
-            }
-
-            // 3. KONTROL PINTU (Improved Keywords)
-            if (cmd.includes('buka') && (cmd.includes('pintu') || cmd.includes('kunci') || cmd.includes('akses'))) {
-                set(ref(db, `nexhome_v3/states/door`), true);
-                speak("Pintu telah dibuka.");
-                return;
-            }
-            if ((cmd.includes('tutup') || cmd.includes('kunci')) && (cmd.includes('pintu') || cmd.includes('kunci'))) {
-                set(ref(db, `nexhome_v3/states/door`), false);
-                speak("Pintu telah dikunci.");
+            if (cmd.includes('hemat') || cmd.includes('ekonomi')) {
+                toggleEcoMode(true);
+                speak("Mode hemat diaktifkan. Semua saklar dimatikan.");
                 return;
             }
 
-            // 4. CEK SENSOR (Improved Keywords)
-            if (cmd.includes('cek') || cmd.includes('berapa') || cmd.includes('status')) {
-                if (cmd.includes('suhu') || cmd.includes('temperatur')) {
-                    const val = document.getElementById('temp').innerText;
-                    speak(`Suhu ruangan saat ini adalah ${val} derajat.`);
-                    return;
-                }
-                if (cmd.includes('lembab') || cmd.includes('kelembaban')) {
-                    const val = document.getElementById('hum').innerText;
-                    speak(`Kelembaban udara saat ini adalah ${val} persen.`);
-                    return;
-                }
-                if (cmd.includes('air') || cmd.includes('tandon') || cmd.includes('bak')) {
-                    const val = document.getElementById('water-val').innerText;
-                    speak(`Level air saat ini adalah ${val} persen.`);
-                    return;
-                }
+            // 4. SENSORS & PINTU
+            if (cmd.includes('pintu')) {
+                const state = cmd.includes('buka');
+                set(ref(db, `nexhome_v3/states/door`), state);
+                speak(`Pintu ${state ? 'dibuka' : 'dikunci'}.`);
+            } else if (cmd.includes('suhu')) {
+                speak(`Suhu saat ini ${document.getElementById('temp').innerText} derajat.`);
+            } else if (cmd.includes('lembab')) {
+                speak(`Kelembaban ${document.getElementById('hum').innerText} persen.`);
+            } else if (cmd.includes('air')) {
+                speak(`Kapasitas air ${document.getElementById('water-val').innerText} persen.`);
+            } else if (cmd.includes('udara')) {
+                speak(`Kualitas udara ${document.getElementById('air-status').innerText} dengan nilai ${document.getElementById('air-val').innerText} PPM.`);
+            } else {
+                speak("Maaf, saya tidak mengerti perintah itu.");
             }
-
-            speak("Maaf, perintah tidak dikenali. Coba lagi.");
         }
+
+        window.toggleEcoMode = (forceOn = false) => {
+            const btn = document.getElementById('btn-eco');
+            const isActive = forceOn || !btn.classList.contains('eco-active');
+            
+            if (isActive) {
+                btn.classList.add('eco-active');
+                const updates = {};
+                for(let i=1; i<=8; i++) updates[`nexhome_v3/states/relay${i}`] = false;
+                update(ref(db), updates);
+                logMini("Eco Mode: Semua Saklar OFF");
+            } else {
+                btn.classList.remove('eco-active');
+            }
+        };
 
         window.switchTab = (id) => {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
@@ -293,30 +334,63 @@
         onValue(rootRef, snap => {
             const data = snap.val();
             if(!data) return;
+
+            // Update Sensors
             document.getElementById('temp').innerText = data.sensors?.temperature ?? "--";
             document.getElementById('hum').innerText = data.sensors?.humidity ?? "--";
+            
+            // Kualitas Udara (Mock logic or use data.sensors.air_quality if exists)
+            const air = data.sensors?.air_quality ?? 45;
+            document.getElementById('air-val').innerText = air;
+            const airStat = document.getElementById('air-status');
+            const airDot = document.getElementById('air-dot');
+            if(air < 100) { airStat.innerText = "BAIK"; airDot.className = "w-3 h-3 rounded-full bg-emerald-500"; }
+            else if(air < 300) { airStat.innerText = "SEDANG"; airDot.className = "w-3 h-3 rounded-full bg-orange-500"; }
+            else { airStat.innerText = "BURUK"; airDot.className = "w-3 h-3 rounded-full bg-red-500"; }
+
+            // Water
             const water = data.sensors?.water_level ?? 0;
             document.getElementById('water-val').innerText = water;
-            document.getElementById('water-bar-bg').style.height = `${water}%`;
+            document.getElementById('water-wave').style.height = `${water}%`;
+            
             document.getElementById('summary-door-text').innerText = data.states?.door ? "Terbuka" : "Terkunci";
 
+            // Update Names for Voice
+            currentNames = data.names || {};
+
+            // Render Switches
             const grid = document.getElementById('grid-switches');
             grid.innerHTML = '';
-            let active = 0;
+            let activeCount = 0;
             for(let i=1; i<=8; i++){
                 const isOn = data.states?.[`relay${i}`] === true;
-                if(isOn) active++;
+                if(isOn) activeCount++;
+                const name = data.names?.[`relay${i}`] || `Saklar ${i}`;
                 const card = document.createElement('div');
-                card.className = `glass p-4 rounded-2xl ${isOn ? 'bg-blue-500/10 border-blue-500/40' : ''}`;
-                card.innerHTML = `<p class="text-[10px] font-bold">${data.names?.[`relay${i}`] || 'Lampu '+i}</p><p class="text-[8px] mt-1 ${isOn?'text-blue-400 font-bold':'text-slate-500'}">${isOn?'HIDUP':'MATI'}</p>`;
+                card.className = `glass p-4 rounded-3xl transition-all ${isOn ? 'border-blue-500/50 bg-blue-500/10' : ''}`;
+                card.innerHTML = `
+                    <p class="text-[10px] font-black uppercase mb-1">${name}</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-[8px] font-bold ${isOn ? 'text-blue-400' : 'text-slate-600'}">${isOn ? 'AKTIF' : 'OFF'}</span>
+                        <div class="w-8 h-4 bg-slate-800 rounded-full relative">
+                            <div class="absolute w-3 h-3 bg-white rounded-full top-0.5 transition-all ${isOn ? 'right-0.5 bg-blue-400' : 'left-0.5'}"></div>
+                        </div>
+                    </div>
+                `;
                 card.onclick = () => set(ref(db, `nexhome_v3/states/relay${i}`), !isOn);
                 grid.appendChild(card);
             }
-            document.getElementById('summary-switches').innerText = active;
+            document.getElementById('summary-switches').innerText = `${activeCount} Unit`;
         });
 
-        setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('id-ID', { hour12: false }); }, 1000);
-        onValue(ref(db, ".info/connected"), s => { document.getElementById('cloud-dot').className = s.val() ? "w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" : "w-2 h-2 rounded-full bg-red-500 animate-pulse"; });
+        setInterval(() => { 
+            const now = new Date();
+            document.getElementById('clock').innerText = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+        }, 1000);
+
+        onValue(ref(db, ".info/connected"), s => { 
+            document.getElementById('cloud-dot').className = s.val() ? "w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" : "w-2 h-2 rounded-full bg-red-500 animate-pulse"; 
+        });
     </script>
 </body>
 </html>
