@@ -3,15 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NexHome Masdar V4.3.1</title>
+    <title>NexHome Masdar V4.5.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #0f172a; --accent: #38bdf8; --card-bg: rgba(30, 41, 59, 0.7); }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg); color: #f8fafc; overflow: hidden; height: 100vh; }
         .glass { background: var(--card-bg); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .tab-content { display: none; height: calc(100vh - 160px); overflow-y: auto; padding-bottom: 120px; }
-        .tab-content.active { display: block; }
+        
+        /* Tab isolation */
+        .tab-content { display: none; height: calc(100vh - 190px); overflow-y: auto; padding-bottom: 100px; width: 100%; }
+        .tab-content.active { display: flex; flex-direction: column; }
+        
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         
         #login-screen { position: fixed; inset: 0; background: #0f172a; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -26,14 +29,20 @@
         .mic-active { animation: pulse-red 1.5s infinite; background-color: #ef4444 !important; }
         
         #voice-overlay {
-            position: fixed; top: 20%; left: 50%; transform: translateX(-50%);
-            background: rgba(56, 189, 248, 0.95); padding: 10px 24px; border-radius: 50px;
-            font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px;
-            z-index: 1000; display: none; color: #0f172a; box-shadow: 0 10px 30px rgba(56,189,248,0.4);
+            position: fixed; top: 15%; left: 50%; transform: translateX(-50%);
+            background: rgba(56, 189, 248, 0.95); padding: 8px 20px; border-radius: 50px;
+            font-size: 10px; font-weight: 800; text-transform: uppercase; z-index: 1000; display: none; color: #0f172a;
         }
 
         #modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); z-index: 300; display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
         #modal.active { display: flex; }
+
+        .chat-bubble { max-width: 85%; padding: 12px 16px; border-radius: 20px; font-size: 13px; margin-bottom: 12px; line-height: 1.4; }
+        .chat-user { background: #38bdf8; color: #0f172a; align-self: flex-end; border-bottom-right-radius: 4px; font-weight: 600; }
+        .chat-ai { background: rgba(255,255,255,0.05); color: #f8fafc; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid rgba(255,255,255,0.1); }
+        
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="flex flex-col">
@@ -42,12 +51,12 @@
 
     <!-- Login Screen -->
     <div id="login-screen">
-        <div class="mb-12 text-center">
-            <div class="w-24 h-24 bg-blue-500/10 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 border border-blue-500/20 shadow-2xl">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        <div class="mb-10 text-center">
+            <div class="w-20 h-20 bg-blue-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-blue-500/20">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
             </div>
-            <h1 class="text-2xl font-extrabold tracking-tighter uppercase italic">NexHome <span class="text-blue-400">Masdar</span></h1>
-            <p class="text-slate-500 text-[10px] mt-2 uppercase tracking-[0.3em] font-bold">Smart Evolution V4.3.1</p>
+            <h1 class="text-2xl font-black italic tracking-tighter uppercase">NexHome <span class="text-blue-400">Masdar</span></h1>
+            <p class="text-slate-500 text-[10px] mt-2 uppercase tracking-[0.3em] font-bold tracking-widest">Security System</p>
         </div>
         
         <div class="flex mb-16">
@@ -57,32 +66,32 @@
             <div class="pin-dot" id="dot-3"></div>
         </div>
 
-        <div class="grid grid-cols-3 gap-8">
+        <div class="grid grid-cols-3 gap-6">
             <script>
                 for(let i=1; i<=9; i++) document.write(`<button onclick="pressPin('${i}')" class="w-16 h-16 rounded-full glass text-xl font-bold active:scale-90 transition-all">${i}</button>`);
             </script>
             <div></div>
             <button onclick="pressPin('0')" class="w-16 h-16 rounded-full glass text-xl font-bold active:scale-90">0</button>
-            <button onclick="clearPin()" class="text-red-500 text-[10px] font-black tracking-widest uppercase">Hapus</button>
+            <button onclick="clearPin()" class="text-red-500 text-[10px] font-black tracking-widest uppercase">Reset</button>
         </div>
     </div>
 
-    <!-- Modal Pengaturan -->
+    <!-- Modal -->
     <div id="modal">
         <div class="glass w-[90%] max-w-sm p-8 rounded-[3rem] space-y-6">
-            <h2 class="text-xl font-black italic">Edit <span class="text-blue-400">Perangkat</span></h2>
+            <h2 class="text-xl font-black italic uppercase">Edit <span class="text-blue-400">Akses</span></h2>
             <div class="space-y-4">
                 <div>
-                    <label class="text-[10px] font-black text-slate-500 uppercase ml-2">Nama Perangkat</label>
+                    <label class="text-[10px] font-black text-slate-500 uppercase ml-2">Label Nama</label>
                     <input id="input-name" class="w-full bg-slate-800/50 border border-white/10 p-4 rounded-2xl mt-1 focus:outline-none focus:border-blue-500 font-bold">
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase ml-2">Waktu Nyala</label>
+                        <label class="text-[10px] font-black text-slate-500 uppercase ml-2">Waktu On</label>
                         <input type="time" id="input-on" class="w-full bg-slate-800/50 border border-white/10 p-3 rounded-2xl mt-1 focus:outline-none focus:border-blue-500 font-bold">
                     </div>
                     <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase ml-2">Waktu Mati</label>
+                        <label class="text-[10px] font-black text-slate-500 uppercase ml-2">Waktu Off</label>
                         <input type="time" id="input-off" class="w-full bg-slate-800/50 border border-white/10 p-3 rounded-2xl mt-1 focus:outline-none focus:border-blue-500 font-bold">
                     </div>
                 </div>
@@ -91,75 +100,103 @@
                     <input type="checkbox" id="check-schedule" class="w-5 h-5 accent-blue-500">
                 </div>
             </div>
-            <div class="flex gap-3 pt-2">
+            <div class="flex gap-3">
                 <button onclick="closeModal()" class="flex-1 p-4 rounded-2xl bg-slate-800 text-xs font-black uppercase">Batal</button>
-                <button id="btn-save" class="flex-1 p-4 rounded-2xl bg-blue-600 text-xs font-black uppercase shadow-lg shadow-blue-500/20">Simpan</button>
+                <button id="btn-save" class="flex-1 p-4 rounded-2xl bg-blue-600 text-xs font-black uppercase">Simpan</button>
             </div>
         </div>
     </div>
 
-    <!-- Header -->
-    <header class="p-6 flex justify-between items-center bg-slate-900/40 border-b border-white/5 backdrop-blur-md">
-        <div>
-            <h1 class="text-lg font-black italic">NexHome <span class="text-blue-400">Masdar</span></h1>
-            <div class="flex items-center gap-2">
-                <div id="cloud-dot" class="w-2 h-2 rounded-full bg-red-500"></div>
-                <span class="text-[9px] font-bold text-slate-500 uppercase">Blora Online</span>
+    <!-- Header & Mini Log -->
+    <header class="p-5 flex flex-col gap-3 bg-slate-900/40 border-b border-white/5 backdrop-blur-md">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-base font-black italic">NexHome <span class="text-blue-400">Masdar</span></h1>
+                <div class="flex items-center gap-1.5">
+                    <div id="cloud-dot" class="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                    <span class="text-[8px] font-bold text-slate-500 uppercase">System V4.5.1</span>
+                </div>
             </div>
+            <button onclick="toggleEcoMode()" class="px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-[8px] font-black uppercase text-blue-400 tracking-wider">Mode Hemat</button>
         </div>
-        <button id="btn-eco" onclick="toggleEcoMode()" class="px-3 py-1.5 border border-white/10 rounded-full text-[9px] font-black uppercase transition-all">Mode Hemat</button>
+        
+        <!-- Baris Log Aktivitas Atas -->
+        <div class="w-full py-1.5 px-3 bg-white/5 border border-white/5 rounded-lg flex items-center gap-2 h-7 overflow-hidden">
+            <span class="text-[8px] font-black text-blue-400 uppercase italic shrink-0">Log:</span>
+            <div id="log-text" class="text-[8px] font-bold text-slate-400 uppercase truncate">Menunggu perintah...</div>
+        </div>
     </header>
 
-    <!-- Dashboard -->
-    <div id="tab-dashboard" class="tab-content active p-5 space-y-4 overflow-y-auto scrollbar-hide">
-        <div class="grid grid-cols-3 gap-3">
-            <div class="glass p-3 rounded-3xl text-center">
-                <p class="text-[7px] font-black text-slate-500 uppercase">Suhu</p>
-                <p class="text-lg font-black italic"><span id="temp">--</span>°</p>
-            </div>
-            <div class="glass p-3 rounded-3xl text-center">
-                <p class="text-[7px] font-black text-slate-500 uppercase">Lembab</p>
-                <p class="text-lg font-black italic text-blue-400"><span id="hum">--</span>%</p>
-            </div>
-            <div class="glass p-3 rounded-3xl text-center">
-                <p class="text-[7px] font-black text-slate-500 uppercase">Udara</p>
-                <p id="air-status" class="text-[10px] font-black text-emerald-400">OK</p>
+    <!-- TAB CONTAINER -->
+    <main class="flex-1 relative overflow-hidden">
+        
+        <!-- ASISTEN AI (DEFAULT) -->
+        <div id="tab-ai" class="tab-content active p-5 scrollbar-hide">
+            <div class="flex-1 flex flex-col space-y-4 overflow-y-auto" id="chat-container">
+                <div class="chat-bubble chat-ai">Selamat datang kembali! Saya asisten AI Anda. Apa yang bisa saya bantu hari ini?</div>
             </div>
         </div>
 
-        <div class="glass p-5 rounded-[2.5rem] relative overflow-hidden h-28 flex flex-col justify-end">
-            <p class="text-[8px] font-black text-slate-500 uppercase absolute top-6 left-6">Level Tandon</p>
-            <p class="text-4xl font-black italic z-10"><span id="water-val">--</span><span class="text-blue-400 text-lg ml-1">%</span></p>
-            <div id="water-wave" class="absolute bottom-0 left-0 right-0 bg-blue-600/20 transition-all duration-1000" style="height: 0%"></div>
+        <!-- DASHBOARD / INSIGHTS -->
+        <div id="tab-dashboard" class="tab-content p-5 space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+                <div class="glass p-4 rounded-3xl">
+                    <p class="text-[8px] font-bold text-slate-500 uppercase mb-2">Cuaca Dalam</p>
+                    <div class="flex justify-between items-end">
+                        <p class="text-2xl font-black"><span id="temp">--</span>°</p>
+                        <p class="text-xs font-bold text-blue-400"><span id="hum">--</span>%</p>
+                    </div>
+                </div>
+                <div class="glass p-4 rounded-3xl">
+                    <p class="text-[8px] font-bold text-slate-500 uppercase mb-2">Polusi Udara</p>
+                    <p id="air-status" class="text-sm font-black uppercase text-emerald-400">Normal</p>
+                    <p class="text-[8px] text-slate-500 mt-1"><span id="air-val">--</span> PPM</p>
+                </div>
+            </div>
+
+            <div class="glass p-6 rounded-[2.5rem] relative overflow-hidden h-36 flex flex-col justify-end">
+                <p class="text-[8px] font-black text-slate-500 uppercase absolute top-6 left-6">Level Air Tandon</p>
+                <p class="text-4xl font-black z-10"><span id="water-val">--</span><span class="text-blue-400 text-lg ml-1">%</span></p>
+                <div id="water-wave" class="absolute bottom-0 left-0 right-0 bg-blue-500/20 transition-all duration-1000" style="height: 0%"></div>
+            </div>
         </div>
 
-        <div class="glass p-5 rounded-[2.5rem]">
-            <p class="text-[9px] font-black text-slate-500 uppercase mb-3 tracking-widest">Sistem Log</p>
-            <div id="mini-log" class="text-[10px] space-y-2 text-slate-400 font-medium h-20 overflow-hidden"></div>
+        <!-- CONTROL -->
+        <div id="tab-control" class="tab-content p-5">
+            <div class="glass p-5 rounded-[2.5rem] mb-6 flex justify-between items-center border-l-4 border-blue-400">
+                <div>
+                    <p class="text-xs font-black uppercase">Pintu Utama</p>
+                    <p id="door-status-text" class="text-[9px] text-slate-500 font-bold uppercase mt-1 italic">Status: Aman</p>
+                </div>
+                <button id="btn-toggle-door" class="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center border border-white/10 active:scale-95">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="door-icon"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                </button>
+            </div>
+            
+            <div id="grid-switches" class="grid grid-cols-2 gap-3"></div>
         </div>
-    </div>
 
-    <!-- Controls -->
-    <div id="tab-control" class="tab-content p-5">
-        <p class="text-[9px] font-black text-slate-500 uppercase mb-4 ml-2">Tekan lama untuk edit</p>
-        <div id="grid-switches" class="grid grid-cols-2 gap-3 pb-24"></div>
-    </div>
+    </main>
 
     <!-- Navigation -->
-    <nav class="fixed bottom-0 left-0 right-0 glass h-20 flex items-center justify-around px-8 pb-4 z-50 rounded-t-[2.5rem] border-t border-white/5">
-        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center gap-1 text-blue-400">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
-            <span class="text-[8px] font-black uppercase">Home</span>
+    <nav class="fixed bottom-0 left-0 right-0 glass h-20 flex items-center justify-around px-4 pb-4 z-50 rounded-t-[2.5rem]">
+        <button onclick="switchTab('ai')" id="nav-ai" class="flex flex-col items-center gap-1 text-blue-400">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            <span class="text-[7px] font-black uppercase tracking-widest">Asisten</span>
+        </button>
+        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center gap-1 text-slate-600">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+            <span class="text-[7px] font-black uppercase tracking-widest">Wawasan</span>
         </button>
         <button onclick="switchTab('control')" id="nav-control" class="flex flex-col items-center gap-1 text-slate-600">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="20" y1="21" x2="20" y2="16"></line></svg>
-            <span class="text-[8px] font-black uppercase">Kontrol</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect><polyline points="17 2 12 7 7 2"></polyline></svg>
+            <span class="text-[7px] font-black uppercase tracking-widest">Kontrol</span>
         </button>
     </nav>
 
-    <!-- Voice Button -->
-    <button id="btn-voice" class="fixed bottom-24 right-6 w-16 h-16 bg-blue-600 rounded-full hidden items-center justify-center shadow-2xl z-[100] active:scale-95 transition-all border-4 border-slate-900">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>
+    <!-- Voice Trigger -->
+    <button id="btn-voice" class="fixed bottom-24 right-6 w-14 h-14 bg-blue-600 rounded-full hidden items-center justify-center shadow-2xl z-[100] active:scale-95 border-4 border-slate-900">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>
     </button>
 
     <script type="module">
@@ -178,11 +215,16 @@
         const rootRef = ref(db, "nexhome_v3");
 
         let currentNames = {};
+        let currentStates = {};
+        let currentSensors = {};
         let pinInput = "";
         let currentEditingId = null;
         const CORRECT_PIN = "1234";
 
-        // PIN Login
+        function setLogActivity(msg) {
+            document.getElementById('log-text').innerText = msg;
+        }
+
         window.pressPin = (num) => {
             if(pinInput.length < 4) {
                 pinInput += num;
@@ -191,16 +233,15 @@
                     setTimeout(() => {
                         document.getElementById('login-screen').style.transform = 'translateY(-100%)';
                         document.getElementById('btn-voice').style.display = 'flex';
-                        speak("Akses diterima. Sistem aktif.");
+                        switchTab('ai'); 
                     }, 300);
                 } else if(pinInput.length === 4) {
-                    setTimeout(() => { pinInput = ""; for(let i=0; i<4; i++) document.getElementById(`dot-${i}`).className = 'pin-dot'; speak("Pin salah."); }, 200);
+                    setTimeout(() => { pinInput = ""; for(let i=0; i<4; i++) document.getElementById(`dot-${i}`).className = 'pin-dot'; }, 200);
                 }
             }
         };
         window.clearPin = () => { pinInput = ""; for(let i=0; i<4; i++) document.getElementById(`dot-${i}`).className = 'pin-dot'; };
 
-        // Modal Logic
         window.openModal = (id, name, sched) => {
             currentEditingId = id;
             document.getElementById('input-name').value = name || `Saklar ${id}`;
@@ -213,20 +254,18 @@
 
         document.getElementById('btn-save').onclick = async () => {
             const newName = document.getElementById('input-name').value;
-            const updates = {};
-            updates[`nexhome_v3/names/relay${currentEditingId}`] = newName;
-            updates[`nexhome_v3/schedules/relay${currentEditingId}`] = {
-                on: document.getElementById('input-on').value,
-                off: document.getElementById('input-off').value,
-                active: document.getElementById('check-schedule').checked
-            };
-            await update(ref(db), updates);
+            await update(ref(db), {
+                [`nexhome_v3/names/relay${currentEditingId}`]: newName,
+                [`nexhome_v3/schedules/relay${currentEditingId}`]: {
+                    on: document.getElementById('input-on').value,
+                    off: document.getElementById('input-off').value,
+                    active: document.getElementById('check-schedule').checked
+                }
+            });
             closeModal();
-            logMini(`Pengaturan ${newName} disimpan.`);
-            speak(`Pengaturan ${newName} telah diperbarui.`);
+            setLogActivity(`${newName} Diupdate`);
         };
 
-        // VOICE ENGINE
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const recognition = SpeechRecognition ? new SpeechRecognition() : null;
         if (recognition) { recognition.lang = 'id-ID'; }
@@ -236,7 +275,16 @@
             const msg = new SpeechSynthesisUtterance(text);
             msg.lang = 'id-ID';
             window.speechSynthesis.speak(msg);
-            logMini(text);
+            addChatMessage(text, 'ai');
+        }
+
+        function addChatMessage(text, role) {
+            const container = document.getElementById('chat-container');
+            const div = document.createElement('div');
+            div.className = `chat-bubble ${role === 'user' ? 'chat-user' : 'chat-ai'} fade-in`;
+            div.innerText = text;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
         }
 
         const micBtn = document.getElementById('btn-voice');
@@ -245,124 +293,92 @@
         };
 
         if (recognition) {
-            recognition.onresult = (e) => processCmd(e.results[0][0].transcript.toLowerCase());
+            recognition.onresult = (e) => {
+                const cmd = e.results[0][0].transcript.toLowerCase();
+                addChatMessage(cmd, 'user');
+                processCmd(cmd);
+            };
             recognition.onend = () => { micBtn.classList.remove('mic-active'); document.getElementById('voice-overlay').style.display='none'; };
         }
 
         function processCmd(cmd) {
-            console.log("CMD:", cmd);
-            const numMap = { 'satu': 1, '1': 1, 'dua': 2, '2': 2, 'tiga': 3, '3': 3, 'empat': 4, '4': 4, 'lima': 5, '5': 5, 'enam': 6, '6': 6, 'tujuh': 7, '7': 7, 'delapan': 8, '8': 8 };
-            
-            // 1. VOID SCHEDULE CONTROL
-            if (cmd.includes('jadwal')) {
-                const isActive = cmd.includes('aktif') || cmd.includes('nyala') || cmd.includes('hidup');
-                const isDeactive = cmd.includes('mati') || cmd.includes('nonaktif') || cmd.includes('matikan');
-                
-                for (let i = 1; i <= 8; i++) {
-                    const name = (currentNames[`relay${i}`] || "").toLowerCase();
-                    if (cmd.includes(name) || (cmd.includes('saklar') && cmd.includes(i.toString()))) {
-                        update(ref(db, `nexhome_v3/schedules/relay${i}`), { active: isActive });
-                        speak(`Jadwal ${name || 'saklar '+i} telah ${isActive ? 'diaktifkan' : 'dimatikan'}.`);
-                        return;
-                    }
-                }
+            if (cmd.includes('status')) {
+                speak(`Suhu ${currentSensors.temperature}°C, Lembab ${currentSensors.humidity}%, Udara ${currentSensors.air_quality} PPM, Air ${currentSensors.water_level}%. Pintu ${currentStates.door ? 'Terbuka' : 'Terkunci'}.`);
+                return;
             }
-
-            // 2. DYNAMIC NAME/RELAY CONTROL
+            if (cmd.includes('hemat')) { toggleEcoMode(); return; }
+            if (cmd.includes('pintu')) {
+                const s = cmd.includes('buka');
+                set(ref(db, `nexhome_v3/states/door`), s);
+                speak(`Pintu ${s ? 'dibuka' : 'dikunci'}.`);
+                return;
+            }
             for (let i = 1; i <= 8; i++) {
                 const name = (currentNames[`relay${i}`] || "").toLowerCase();
-                const isOn = cmd.includes('nyala') || cmd.includes('hidup') || cmd.includes('aktif');
-                const isOff = cmd.includes('mati') || cmd.includes('padam') || cmd.includes('tutup');
-
-                if ((name && cmd.includes(name)) || (cmd.includes('saklar') && (cmd.includes(i.toString()) || cmd.includes(Object.keys(numMap).find(k => numMap[k] === i))))) {
-                    set(ref(db, `nexhome_v3/states/relay${i}`), isOn);
-                    speak(`${name || 'Saklar '+i} ${isOn ? 'dinyalakan' : 'dimatikan'}.`);
+                if (cmd.includes(name) || (cmd.includes('saklar') && cmd.includes(i.toString()))) {
+                    const state = cmd.includes('nyala') || cmd.includes('hidup');
+                    set(ref(db, `nexhome_v3/states/relay${i}`), state);
+                    speak(`${name || 'Saklar '+i} ${state ? 'dinyalakan' : 'dimatikan'}.`);
                     return;
                 }
             }
-
-            // 3. GLOBAL & SENSORS
-            if (cmd.includes('semua')) {
-                const state = cmd.includes('nyala') || cmd.includes('hidup');
-                const updates = {};
-                for(let i=1; i<=8; i++) updates[`nexhome_v3/states/relay${i}`] = state;
-                update(ref(db), updates);
-                speak(`Semua peralatan ${state ? 'dinyalakan' : 'dimatikan'}.`);
-            } else if (cmd.includes('pintu')) {
-                const state = cmd.includes('buka');
-                set(ref(db, `nexhome_v3/states/door`), state);
-                speak(`Pintu ${state ? 'dibuka' : 'dikunci'}.`);
-            } else if (cmd.includes('suhu')) {
-                speak(`Suhu saat ini ${document.getElementById('temp').innerText} derajat.`);
-            } else if (cmd.includes('air')) {
-                speak(`Kapasitas air ${document.getElementById('water-val').innerText} persen.`);
-            } else {
-                speak("Perintah tidak dikenali.");
-            }
+            speak("Perintah tidak dikenali.");
         }
 
         window.toggleEcoMode = () => {
             const updates = {};
             for(let i=1; i<=8; i++) updates[`nexhome_v3/states/relay${i}`] = false;
             update(ref(db), updates);
-            speak("Mode hemat aktif. Semua saklar dimatikan.");
+            speak("Mode hemat aktif.");
         };
 
         window.switchTab = (id) => {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.getElementById(`tab-${id}`).classList.add('active');
-            document.getElementById('nav-dashboard').className = `flex flex-col items-center gap-1 ${id==='dashboard'?'text-blue-400':'text-slate-600'}`;
-            document.getElementById('nav-control').className = `flex flex-col items-center gap-1 ${id==='control'?'text-blue-400':'text-slate-600'}`;
+            ['ai', 'dashboard', 'control'].forEach(tab => {
+                document.getElementById(`nav-${tab}`).className = `flex flex-col items-center gap-1 ${id===tab?'text-blue-400':'text-slate-600'}`;
+            });
         };
-
-        function logMini(msg) {
-            const el = document.getElementById('mini-log');
-            el.innerHTML = `<div class="bg-white/5 p-2 rounded-xl border-l-2 border-blue-500 fade-in">${msg}</div>` + el.innerHTML;
-        }
 
         onValue(rootRef, snap => {
             const data = snap.val();
             if(!data) return;
+            currentNames = data.names || {};
+            currentStates = data.states || {};
+            currentSensors = data.sensors || {};
 
             document.getElementById('temp').innerText = data.sensors?.temperature ?? "--";
             document.getElementById('hum').innerText = data.sensors?.humidity ?? "--";
-            const water = data.sensors?.water_level ?? 0;
-            document.getElementById('water-val').innerText = water;
-            document.getElementById('water-wave').style.height = `${water}%`;
-            
-            currentNames = data.names || {};
+            document.getElementById('water-val').innerText = data.sensors?.water_level ?? 0;
+            document.getElementById('water-wave').style.height = `${data.sensors?.water_level ?? 0}%`;
+            document.getElementById('air-val').innerText = data.sensors?.air_quality ?? 0;
+
+            const dOn = data.states?.door === true;
+            document.getElementById('door-status-text').innerText = dOn ? "Pintu Terbuka" : "Pintu Terkunci";
+            document.getElementById('btn-toggle-door').onclick = () => set(ref(db, `nexhome_v3/states/door`), !dOn);
 
             const grid = document.getElementById('grid-switches');
             grid.innerHTML = '';
             for(let i=1; i<=8; i++){
                 const isOn = data.states?.[`relay${i}`] === true;
                 const name = data.names?.[`relay${i}`] || `Saklar ${i}`;
-                const sched = data.schedules?.[`relay${i}`];
                 const card = document.createElement('div');
-                card.className = `glass p-4 rounded-[2rem] transition-all relative overflow-hidden ${isOn ? 'bg-blue-600/10 border-blue-500/30' : ''}`;
-                card.innerHTML = `
-                    <p class="text-[9px] font-black uppercase mb-1">${name}</p>
-                    <div class="flex justify-between items-end">
-                        <span class="text-[7px] font-bold text-slate-500">${sched?.active ? 'SCHED: ON' : 'SCHED: OFF'}</span>
-                        <div class="w-8 h-4 bg-slate-800 rounded-full relative">
-                            <div class="absolute w-3 h-3 bg-white rounded-full top-0.5 transition-all ${isOn ? 'right-0.5 bg-blue-400' : 'left-0.5'}"></div>
-                        </div>
-                    </div>
-                `;
-                
-                // Click to Toggle
-                card.onclick = () => set(ref(db, `nexhome_v3/states/relay${i}`), !isOn);
-                
-                // Long Press to Edit
+                card.className = `glass p-4 rounded-3xl transition-all border-l-4 ${isOn ? 'bg-blue-600/10 border-blue-500' : 'border-slate-800'}`;
+                card.innerHTML = `<p class="text-[9px] font-black uppercase truncate">${name}</p><div class="flex justify-between items-center mt-2"><span class="text-[7px] font-bold text-slate-600 uppercase">Relay ${i}</span><div class="w-7 h-4 bg-slate-900 rounded-full relative"><div class="absolute w-2.5 h-2.5 bg-white rounded-full top-0.5 transition-all ${isOn ? 'right-0.5 bg-blue-400' : 'left-0.5'}"></div></div></div>`;
+                card.onclick = () => { 
+                    set(ref(db, `nexhome_v3/states/relay${i}`), !isOn);
+                    setLogActivity(`${name} ${!isOn ? 'Aktif' : 'Mati'}`);
+                };
                 let timer;
-                card.onmousedown = card.ontouchstart = () => { timer = setTimeout(() => openModal(i, name, sched), 800); };
+                card.onmousedown = card.ontouchstart = () => { timer = setTimeout(() => openModal(i, name, data.schedules?.[`relay${i}`]), 800); };
                 card.onmouseup = card.onmouseleave = card.ontouchend = () => { clearTimeout(timer); };
-                
                 grid.appendChild(card);
             }
         });
 
-        onValue(ref(db, ".info/connected"), s => { document.getElementById('cloud-dot').className = s.val() ? "w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" : "w-2 h-2 rounded-full bg-red-500 animate-pulse"; });
+        onValue(ref(db, ".info/connected"), s => { 
+            document.getElementById('cloud-dot').className = s.val() ? "w-1.5 h-1.5 rounded-full bg-emerald-500" : "w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"; 
+        });
     </script>
 </body>
 </html>
