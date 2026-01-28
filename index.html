@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NexHome Masdar V4.5.4</title>
+    <title>NexHome Masdar V4.6.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -13,19 +13,26 @@
         .tab-content { display: none; height: calc(100vh - 190px); overflow-y: auto; padding-bottom: 100px; width: 100%; }
         .tab-content.active { display: flex; flex-direction: column; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
+        
         #login-screen { position: fixed; inset: 0; background: #0f172a; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
         .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #38bdf8; margin: 0 10px; transition: 0.3s; }
         .pin-dot.filled { background: #38bdf8; box-shadow: 0 0 10px #38bdf8; transform: scale(1.2); }
+        
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
         .mic-active { animation: pulse-red 1.5s infinite; background-color: #ef4444 !important; }
+        
         #voice-overlay { position: fixed; top: 15%; left: 50%; transform: translateX(-50%); background: rgba(56, 189, 248, 0.95); padding: 8px 20px; border-radius: 50px; font-size: 10px; font-weight: 800; text-transform: uppercase; z-index: 1000; display: none; color: #0f172a; }
-        #modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); z-index: 300; display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
-        #modal.active { display: flex; }
+        
         .chat-bubble { max-width: 85%; padding: 12px 16px; border-radius: 20px; font-size: 13px; margin-bottom: 12px; line-height: 1.4; }
         .chat-user { background: #38bdf8; color: #0f172a; align-self: flex-end; border-bottom-right-radius: 4px; font-weight: 600; }
         .chat-ai { background: rgba(255,255,255,0.05); color: #f8fafc; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid rgba(255,255,255,0.1); }
+        
         .fade-in { animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Glass Modal */
+        #modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); z-index: 300; display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+        #modal.active { display: flex; }
     </style>
 </head>
 <body class="flex flex-col">
@@ -38,8 +45,8 @@
             <div class="w-20 h-20 bg-blue-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-blue-500/20">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
             </div>
-            <h1 class="text-2xl font-black italic tracking-tighter uppercase">NexHome <span class="text-blue-400">Masdar</span></h1>
-            <p class="text-slate-500 text-[10px] mt-2 uppercase tracking-[0.3em] font-bold">V4.5.4 Intelligent Control</p>
+            <h1 class="text-2xl font-black italic uppercase">NexHome <span class="text-blue-400">Masdar</span></h1>
+            <p class="text-slate-500 text-[10px] mt-2 uppercase tracking-[0.3em] font-bold">V4.6.0 Gemini Experience</p>
         </div>
         
         <div class="flex mb-16">
@@ -59,132 +66,83 @@
         </div>
     </div>
 
-    <!-- Modal Pengaturan -->
-    <div id="modal">
-        <div class="glass w-[90%] max-w-sm p-8 rounded-[3rem] space-y-6">
-            <h2 class="text-xl font-black italic uppercase">Edit <span class="text-blue-400">Saklar</span></h2>
-            <div class="space-y-4">
-                <div>
-                    <label class="text-[10px] font-black text-slate-500 uppercase ml-2">Label Nama</label>
-                    <input id="input-name" class="w-full bg-slate-800/50 border border-white/10 p-4 rounded-2xl mt-1 focus:outline-none focus:border-blue-500 font-bold">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase ml-2">Mulai Nyala</label>
-                        <input type="time" id="input-on" class="w-full bg-slate-800/50 border border-white/10 p-3 rounded-2xl mt-1 focus:outline-none focus:border-blue-500 font-bold">
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase ml-2">Mulai Mati</label>
-                        <input type="time" id="input-off" class="w-full bg-slate-800/50 border border-white/10 p-3 rounded-2xl mt-1 focus:outline-none focus:border-blue-500 font-bold">
-                    </div>
-                </div>
-                <div class="flex items-center justify-between p-4 glass rounded-2xl">
-                    <span class="text-xs font-black uppercase">Jadwal Aktif</span>
-                    <input type="checkbox" id="check-schedule" class="w-5 h-5 accent-blue-500">
-                </div>
-            </div>
-            <div class="flex gap-3">
-                <button onclick="closeModal()" class="flex-1 p-4 rounded-2xl bg-slate-800 text-xs font-black uppercase">Batal</button>
-                <button id="btn-save" class="flex-1 p-4 rounded-2xl bg-blue-600 text-xs font-black uppercase">Simpan</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Header -->
     <header class="p-5 flex flex-col gap-3 bg-slate-900/40 border-b border-white/5 backdrop-blur-md">
         <div class="flex justify-between items-center">
             <div>
-                <h1 class="text-base font-black italic">NexHome <span class="text-blue-400">Masdar</span></h1>
+                <h1 class="text-base font-black italic uppercase">NexHome <span class="text-blue-400">Masdar</span></h1>
                 <div class="flex items-center gap-1.5">
                     <div id="cloud-dot" class="w-1.5 h-1.5 rounded-full bg-red-500"></div>
-                    <span class="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Master Node V4.5.4</span>
+                    <span class="text-[8px] font-bold text-slate-500 uppercase tracking-widest">AI Asisten Aktif</span>
                 </div>
             </div>
-            <button id="btn-eco-toggle" onclick="toggleEcoMode()" class="px-3 py-1.5 border rounded-full text-[8px] font-black uppercase transition-all">Mode Hemat: --</button>
+            <button id="btn-eco-toggle" onclick="toggleEcoMode()" class="px-3 py-1.5 border rounded-full text-[8px] font-black uppercase transition-all">Eco Mode: --</button>
         </div>
         
         <div class="w-full py-1.5 px-3 bg-white/5 border border-white/5 rounded-lg flex items-center gap-2 h-7 overflow-hidden">
-            <span class="text-[8px] font-black text-blue-400 uppercase italic shrink-0">System Log:</span>
-            <div id="log-text" class="text-[8px] font-bold text-slate-400 uppercase truncate">Menghubungkan ke Cloud...</div>
+            <span class="text-[8px] font-black text-blue-400 uppercase italic shrink-0">Status AI:</span>
+            <div id="log-text" class="text-[8px] font-bold text-slate-400 uppercase truncate">Menyiapkan sistem Gemini...</div>
         </div>
     </header>
 
-    <!-- CONTENT -->
+    <!-- Main -->
     <main class="flex-1 relative overflow-hidden">
         
         <!-- ASISTEN AI -->
         <div id="tab-ai" class="tab-content active p-5 scrollbar-hide">
             <div class="flex-1 flex flex-col space-y-4 overflow-y-auto" id="chat-container">
-                <div class="chat-bubble chat-ai">Menunggu perintah suara... Cobalah "Laporan status" atau "Nyalakan semua lampu".</div>
+                <div class="chat-bubble chat-ai">Halo Masdar! Senang melihatmu kembali. Apa yang bisa aku bantu hari ini?</div>
             </div>
-            <!-- Dynamic Suggestion -->
-            <div id="ai-suggestion" class="mt-4 p-4 glass rounded-2xl border-l-4 border-yellow-500 hidden fade-in">
-                <p class="text-[8px] font-black text-yellow-500 uppercase mb-1 italic">Rekomendasi Pintar:</p>
-                <p id="suggestion-text" class="text-[10px] font-bold text-slate-300">Memuat saran...</p>
+            <!-- Gemini Suggestion Box -->
+            <div id="ai-suggestion" class="mt-4 p-4 glass rounded-2xl border-l-4 border-blue-400 hidden fade-in">
+                <div class="flex items-center gap-2 mb-1">
+                    <div class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
+                    <p class="text-[8px] font-black text-blue-400 uppercase italic">Pikiran Gemini:</p>
+                </div>
+                <p id="suggestion-text" class="text-[11px] font-medium text-slate-300 leading-relaxed italic">Menganalisis data rumah...</p>
             </div>
         </div>
 
-        <!-- WAWASAN (INSIGHTS) -->
+        <!-- DASHBOARD -->
         <div id="tab-dashboard" class="tab-content p-5 space-y-4 scrollbar-hide">
             <div class="grid grid-cols-2 gap-3">
                 <div class="glass p-4 rounded-3xl">
-                    <p class="text-[8px] font-bold text-slate-500 uppercase mb-2">Termometer</p>
+                    <p class="text-[8px] font-bold text-slate-500 uppercase mb-2">Suhu & Lembab</p>
                     <div class="flex justify-between items-end">
                         <p class="text-2xl font-black"><span id="temp">--</span>°</p>
                         <p class="text-xs font-bold text-blue-400"><span id="hum">--</span>%</p>
                     </div>
                 </div>
                 <div class="glass p-4 rounded-3xl">
-                    <p class="text-[8px] font-bold text-slate-500 uppercase mb-2">Kualitas Udara</p>
-                    <p id="air-status" class="text-sm font-black uppercase text-emerald-400">Normal</p>
+                    <p class="text-[8px] font-bold text-slate-500 uppercase mb-2">Udara (PPM)</p>
+                    <p id="air-status" class="text-sm font-black uppercase text-emerald-400">Sehat</p>
                     <p class="text-[8px] text-slate-500 mt-1"><span id="air-val">--</span> PPM</p>
                 </div>
             </div>
-
-            <div class="glass p-5 rounded-[2.5rem] grid grid-cols-2 gap-4 divide-x divide-white/10">
-                <div class="pr-2">
-                    <p class="text-[8px] font-black text-slate-500 uppercase mb-2">Beban Saklar</p>
-                    <div class="flex items-center gap-3">
-                        <div class="flex flex-col">
-                            <span id="sw-on-count" class="text-xl font-black text-blue-400">0</span>
-                            <span class="text-[7px] font-bold text-slate-500 uppercase">Menyala</span>
-                        </div>
-                        <div class="flex flex-col border-l border-white/10 pl-3">
-                            <span id="sw-off-count" class="text-xl font-black text-slate-400">8</span>
-                            <span class="text-[7px] font-bold text-slate-500 uppercase">Mati</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="pl-4">
-                    <p class="text-[8px] font-black text-slate-500 uppercase mb-2">Log Keamanan</p>
-                    <div class="flex flex-col">
-                        <span id="insight-door-status" class="text-sm font-black uppercase text-blue-400">Locked</span>
-                        <span id="insight-eco-status" class="text-[7px] font-bold text-slate-500 uppercase mt-1 italic italic">Eco Mode: Off</span>
-                    </div>
-                </div>
-            </div>
-
+            
             <div class="glass p-6 rounded-[2.5rem] relative overflow-hidden h-36 flex flex-col justify-end">
                 <p class="text-[8px] font-black text-slate-500 uppercase absolute top-6 left-6">Level Air Tandon</p>
                 <p class="text-4xl font-black z-10"><span id="water-val">--</span><span class="text-blue-400 text-lg ml-1">%</span></p>
                 <div id="water-wave" class="absolute bottom-0 left-0 right-0 bg-blue-500/20 transition-all duration-1000" style="height: 0%"></div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="glass p-4 rounded-3xl text-center">
+                    <p class="text-[8px] font-bold text-slate-500 uppercase mb-1">Lampu Aktif</p>
+                    <p id="sw-on-count" class="text-xl font-black text-blue-400">0</p>
+                </div>
+                <div class="glass p-4 rounded-3xl text-center">
+                    <p class="text-[8px] font-bold text-slate-500 uppercase mb-1">Pintu Utama</p>
+                    <p id="insight-door-status" class="text-xs font-black uppercase">Locked</p>
+                </div>
             </div>
         </div>
 
         <!-- KONTROL -->
         <div id="tab-control" class="tab-content p-5 scrollbar-hide">
             <div class="flex gap-2 mb-4">
-                <button onclick="setAllRelays(true)" class="flex-1 p-3 glass rounded-2xl text-[8px] font-black uppercase text-blue-400 border border-blue-500/20">Semua ON</button>
-                <button onclick="setAllRelays(false)" class="flex-1 p-3 glass rounded-2xl text-[8px] font-black uppercase text-slate-400 border border-white/5">Semua OFF</button>
-            </div>
-            <div class="glass p-5 rounded-[2.5rem] mb-6 flex justify-between items-center border-l-4 border-blue-400">
-                <div>
-                    <p class="text-xs font-black uppercase">Pintu Utama</p>
-                    <p id="door-status-text" class="text-[9px] text-slate-500 font-bold uppercase mt-1 italic">Sistem Keamanan Aktif</p>
-                </div>
-                <button id="btn-toggle-door" class="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center border border-white/10 active:scale-95">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="door-icon"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                </button>
+                <button onclick="setAllRelays(true)" class="flex-1 p-3 glass rounded-2xl text-[8px] font-black uppercase text-blue-400 border border-blue-500/20">Nyalakan Semua</button>
+                <button onclick="setAllRelays(false)" class="flex-1 p-3 glass rounded-2xl text-[8px] font-black uppercase text-slate-400 border border-white/5">Matikan Semua</button>
             </div>
             <div id="grid-switches" class="grid grid-cols-2 gap-3"></div>
         </div>
@@ -194,11 +152,11 @@
     <nav class="fixed bottom-0 left-0 right-0 glass h-20 flex items-center justify-around px-4 pb-4 z-50 rounded-t-[2.5rem]">
         <button onclick="switchTab('ai')" id="nav-ai" class="flex flex-col items-center gap-1 text-blue-400">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-            <span class="text-[7px] font-black uppercase tracking-widest">Asisten</span>
+            <span class="text-[7px] font-black uppercase tracking-widest">Gemini</span>
         </button>
         <button onclick="switchTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center gap-1 text-slate-600">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
-            <span class="text-[7px] font-black uppercase tracking-widest">Wawasan</span>
+            <span class="text-[7px] font-black uppercase tracking-widest">Monitor</span>
         </button>
         <button onclick="switchTab('control')" id="nav-control" class="flex flex-col items-center gap-1 text-slate-600">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect><polyline points="17 2 12 7 7 2"></polyline></svg>
@@ -232,10 +190,13 @@
         let pinInput = "";
         const CORRECT_PIN = "1234";
 
-        function speak(text, skipChat = false) {
+        // --- GEMINI STYLE SPEECH ---
+        function speakGemini(text, skipChat = false) {
             window.speechSynthesis.cancel();
             const msg = new SpeechSynthesisUtterance(text);
             msg.lang = 'id-ID';
+            msg.pitch = 1.1; // Sedikit lebih tinggi agar ramah
+            msg.rate = 1.0;  // Kecepatan natural
             window.speechSynthesis.speak(msg);
             if(!skipChat) addChatMessage(text, 'ai');
         }
@@ -249,70 +210,68 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        function logMini(msg) {
-            document.getElementById('log-text').innerText = msg.toUpperCase();
-        }
-
-        // --- Logic Kontrol Massal ---
-        window.setAllRelays = async (state) => {
-            const updates = {};
-            for(let i=1; i<=8; i++) updates[`nexhome_v3/states/relay${i}`] = state;
-            await update(ref(db), updates);
-            logMini(`Semua Saklar ${state ? 'Dinyalakan' : 'Dimatikan'}`);
-        };
-
-        // --- Logic Analisis AI ---
-        function getSmartConditionReport() {
-            let reports = [];
+        // --- LOGIKA NARASI GEMINI ---
+        function generateGeminiReport() {
             const { temperature, humidity, air_quality, water_level } = currentSensors;
+            const greetings = ["Oke Masdar, ini laporan rumahmu.", "Tentu, mari kita cek kondisi rumah saat ini.", "Rumahmu dalam pantauanku, begini kondisinya."];
+            const greeting = greetings[Math.floor(Math.random() * greetings.length)];
             
-            reports.push(`Suhu saat ini ${temperature || '--'} derajat dengan kelembaban ${humidity || '--'} persen.`);
-            
-            // Laporan Kualitas Udara
-            if (air_quality) {
-                const airTxt = air_quality < 50 ? "bersih" : (air_quality < 100 ? "sedikit berpolusi" : "buruk");
-                reports.push(`Kualitas udara di dalam ruangan tergolong ${airTxt} dengan kadar ${air_quality} PPM.`);
+            let sentences = [greeting];
+
+            // Narasi Suhu
+            if(temperature) {
+                if(temperature < 23) sentences.push(`Di sini suhunya cukup adem, sekitar ${temperature} derajat.`);
+                else if(temperature > 30) sentences.push(`Lagi agak gerah ya Masdar, suhunya menyentuh ${temperature} derajat.`);
+                else sentences.push(`Suhu ruangan sangat nyaman di angka ${temperature} derajat.`);
             }
 
-            // Laporan Air
-            if (water_level !== undefined) {
-                reports.push(`Volume air tandon berada di level ${water_level} persen.`);
+            // Narasi Udara
+            if(air_quality) {
+                const airTxt = air_quality < 50 ? "segar banget" : (air_quality < 100 ? "masih aman" : "agak pengap");
+                sentences.push(`Kualitas udaranya ${airTxt} dengan kadar ${air_quality} PPM.`);
             }
 
-            // Laporan Perangkat
+            // Narasi Air
+            if(water_level !== undefined) {
+                if(water_level < 20) sentences.push(`Oh ya, air tandonmu sisa ${water_level} persen lagi, jangan sampai kehabisan ya.`);
+                else sentences.push(`Persediaan air tandon aman di level ${water_level} persen.`);
+            }
+
+            // Narasi Perangkat
             let onCount = 0;
             for(let i=1; i<=8; i++) if(currentStates[`relay${i}`]) onCount++;
-            reports.push(`Ada ${onCount} perangkat yang sedang menyala.`);
-            
-            // Laporan Pintu
-            reports.push(`Status pintu utama saat ini ${currentStates.door ? 'terbuka' : 'terkunci rapat'}.`);
+            if(onCount > 0) sentences.push(`Ada ${onCount} perangkat yang masih menyala.`);
+            else sentences.push(`Semua perangkat dalam keadaan mati.`);
 
-            return reports.join(" ");
+            // Pintu
+            sentences.push(`Dan untuk pintu utama, statusnya ${currentStates.door ? 'masih terbuka' : 'sudah terkunci aman'}.`);
+
+            return sentences.join(" ");
         }
 
-        function getActionSaran() {
+        function getFriendlySaran() {
             const { temperature, humidity, air_quality, water_level } = currentSensors;
-            let suggestions = [];
-            
-            if (temperature < 22) suggestions.push("Suhu dingin, gunakan pakaian hangat.");
-            if (humidity > 75) suggestions.push("Udara lembab, disarankan buka jendela.");
-            if (air_quality > 100) suggestions.push("Udara buruk, nyalakan pembersih udara.");
-            if (water_level < 20) suggestions.push("Air tandon hampir habis, segera isi ulang.");
-            
+            let sarans = [];
+
+            if (temperature < 22) sarans.push("Masdar, suhunya lagi dingin nih, jangan lupa pakai jaket ya kalau mau keluar.");
+            if (humidity > 75) sarans.push("Udaranya agak lembab, mungkin jendela bisa dibuka sebentar supaya lebih segar.");
+            if (air_quality > 100) sarans.push("Kualitas udara lagi kurang bagus, sebaiknya nyalakan air purifier atau tutup jendela dulu.");
+            if (water_level < 20) sarans.push("Cek tandon air ya, levelnya sudah sangat rendah.");
+
             const box = document.getElementById('ai-suggestion');
             const txt = document.getElementById('suggestion-text');
             
-            if (suggestions.length > 0) {
+            if (sarans.length > 0) {
                 box.classList.remove('hidden');
-                txt.innerText = suggestions[0];
-                return "Saran saya: " + suggestions[0];
+                txt.innerText = sarans[0];
+                return sarans[0];
             } else {
                 box.classList.add('hidden');
-                return "Kondisi rumah dalam keadaan sangat baik.";
+                return "Semua sensor menunjukkan kondisi ideal. Masdar bisa bersantai dengan tenang!";
             }
         }
 
-        // --- Auth & Navigation ---
+        // --- AUTH & UI ---
         window.pressPin = (num) => {
             if(pinInput.length < 4) {
                 pinInput += num;
@@ -322,8 +281,7 @@
                         document.getElementById('login-screen').style.transform = 'translateY(-100%)';
                         document.getElementById('btn-voice').style.display = 'flex';
                         switchTab('ai'); 
-                        const saran = getActionSaran();
-                        speak(`Akses diterima. Selamat datang Masdar. ${saran}`, true);
+                        speakGemini(`Halo Masdar! Akses diterima. ${getFriendlySaran()}`, true);
                     }, 300);
                 } else if(pinInput.length === 4) {
                     setTimeout(() => { pinInput = ""; for(let i=0; i<4; i++) document.getElementById(`dot-${i}`).className = 'pin-dot'; }, 200);
@@ -332,28 +290,7 @@
         };
         window.clearPin = () => { pinInput = ""; for(let i=0; i<4; i++) document.getElementById(`dot-${i}`).className = 'pin-dot'; };
 
-        window.openModal = (id, name, sched) => {
-            currentEditingId = id;
-            document.getElementById('input-name').value = name;
-            document.getElementById('input-on').value = sched?.on || "18:00";
-            document.getElementById('input-off').value = sched?.off || "06:00";
-            document.getElementById('check-schedule').checked = sched?.active || false;
-            document.getElementById('modal').classList.add('active');
-        };
-        window.closeModal = () => document.getElementById('modal').classList.remove('active');
-        document.getElementById('btn-save').onclick = async () => {
-            const newName = document.getElementById('input-name').value;
-            await update(ref(db), {
-                [`nexhome_v3/names/relay${currentEditingId}`]: newName,
-                [`nexhome_v3/schedules/relay${currentEditingId}`]: {
-                    on: document.getElementById('input-on').value, off: document.getElementById('input-off').value, active: document.getElementById('check-schedule').checked
-                }
-            });
-            closeModal();
-            logMini(`Nama ${newName} Disimpan`);
-        };
-
-        // --- Voice Intelligence ---
+        // --- VOICE LOGIC ---
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const recognition = SpeechRecognition ? new SpeechRecognition() : null;
         if(recognition) {
@@ -361,7 +298,7 @@
             recognition.onresult = (e) => {
                 const cmd = e.results[0][0].transcript.toLowerCase();
                 addChatMessage(cmd, 'user');
-                processCmd(cmd);
+                processGeminiCmd(cmd);
             };
             recognition.onend = () => { 
                 document.getElementById('btn-voice').classList.remove('mic-active'); 
@@ -373,20 +310,17 @@
             try { recognition.start(); document.getElementById('btn-voice').classList.add('mic-active'); document.getElementById('voice-overlay').style.display='block'; } catch(e) { recognition.stop(); }
         };
 
-        function processCmd(cmd) {
-            // Perintah Status Lengkap
-            if (cmd.includes('status') || cmd.includes('laporan')) {
-                const report = getSmartConditionReport();
-                const saran = getActionSaran();
-                speak(`${report} ${saran}`);
+        function processGeminiCmd(cmd) {
+            if (cmd.includes('status') || cmd.includes('laporan') || cmd.includes('gimana kondisi')) {
+                speakGemini(generateGeminiReport());
                 return;
             }
 
-            // Perintah Massal
             if (cmd.includes('semua') || cmd.includes('seluruh')) {
-                const turnOn = cmd.includes('nyala') || cmd.includes('hidup') || cmd.includes('aktif');
+                const turnOn = cmd.includes('nyala') || cmd.includes('hidup');
                 setAllRelays(turnOn);
-                speak(`Baik Masdar, semua perangkat telah saya ${turnOn ? 'nyalakan' : 'matikan'}.`);
+                const resp = turnOn ? "Beres! Semua perangkat sudah aku nyalakan." : "Siap Masdar, semuanya sudah aku matikan ya.";
+                speakGemini(resp);
                 return;
             }
 
@@ -398,31 +332,37 @@
             if (cmd.includes('pintu')) {
                 const s = cmd.includes('buka');
                 set(ref(db, `nexhome_v3/states/door`), s);
-                speak(`Pintu utama ${s ? 'dibuka' : 'dikunci'}.`);
+                speakGemini(s ? "Pintu utama sudah aku buka ya." : "Oke, pintu utama sekarang terkunci rapat.");
                 return;
             }
 
-            // Perintah Individual
+            // Individual Control
+            let handled = false;
             for (let i = 1; i <= 8; i++) {
                 const name = (currentNames[`relay${i}`] || "").toLowerCase();
-                if (cmd.includes(name) || (cmd.includes('saklar') && cmd.includes(i.toString()))) {
+                if (name && cmd.includes(name)) {
                     const state = cmd.includes('nyala') || cmd.includes('hidup');
                     set(ref(db, `nexhome_v3/states/relay${i}`), state);
-                    speak(`${name || 'Saklar '+i} ${state ? 'dinyalakan' : 'dimatikan'}.`);
-                    return;
+                    speakGemini(`Siap, ${name} sudah ${state ? 'nyala' : 'mati'}.`);
+                    handled = true;
+                    break;
                 }
             }
-            speak("Maaf Masdar, instruksi tidak saya kenali.");
+            if(!handled) speakGemini("Maaf Masdar, aku kurang mengerti. Bisa diulangi?");
         }
+
+        window.setAllRelays = (state) => {
+            const updates = {};
+            for(let i=1; i<=8; i++) updates[`nexhome_v3/states/relay${i}`] = state;
+            update(ref(db), updates);
+        };
 
         window.toggleEcoMode = () => {
             const isEcoNow = !currentStates.eco_mode;
             const updates = { "nexhome_v3/states/eco_mode": isEcoNow };
-            if(isEcoNow) {
-                for(let i=1; i<=8; i++) updates[`nexhome_v3/states/relay${i}`] = false;
-            }
+            if(isEcoNow) for(let i=1; i<=8; i++) updates[`nexhome_v3/states/relay${i}`] = false;
             update(ref(db), updates);
-            speak(`Mode hemat daya ${isEcoNow ? 'diaktifkan' : 'dimatikan'}.`);
+            speakGemini(isEcoNow ? "Mode hemat aku aktifkan ya, semua saklar otomatis mati." : "Mode hemat sudah aku matikan.");
         };
 
         window.switchTab = (id) => {
@@ -433,7 +373,7 @@
             });
         };
 
-        // --- Realtime Data Sync ---
+        // --- DATA SYNC ---
         onValue(rootRef, snap => {
             const data = snap.val();
             if(!data) return;
@@ -441,40 +381,30 @@
             currentStates = data.states || {};
             currentSensors = data.sensors || {};
 
-            // Update UI Sensor
+            // Sensors UI
             document.getElementById('temp').innerText = data.sensors?.temperature ?? "--";
             document.getElementById('hum').innerText = data.sensors?.humidity ?? "--";
             document.getElementById('water-val').innerText = data.sensors?.water_level ?? 0;
             document.getElementById('water-wave').style.height = `${data.sensors?.water_level ?? 0}%`;
             document.getElementById('air-val').innerText = data.sensors?.air_quality ?? "--";
             
-            const airQ = data.sensors?.air_quality ?? 0;
-            const airStat = document.getElementById('air-status');
-            if(airQ < 50) { airStat.innerText = "Bersih"; airStat.className = "text-sm font-black text-emerald-400"; }
-            else if(airQ < 100) { airStat.innerText = "Sedang"; airStat.className = "text-sm font-black text-yellow-400"; }
-            else { airStat.innerText = "Buruk"; airStat.className = "text-sm font-black text-red-400"; }
-
-            // Eco Mode UI
-            const isEco = data.states?.eco_mode === true;
-            const ecoBtn = document.getElementById('btn-eco-toggle');
-            ecoBtn.innerText = `Mode Hemat: ${isEco ? 'ON' : 'OFF'}`;
-            ecoBtn.className = `px-3 py-1.5 border rounded-full text-[8px] font-black uppercase transition-all ${isEco ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400' : 'bg-blue-500/10 border-blue-500/20 text-blue-400'}`;
-            document.getElementById('insight-eco-status').innerText = `Eco Mode: ${isEco ? 'Active' : 'Off'}`;
-
             // Perangkat Stats
             let onCount = 0;
             for(let i=1; i<=8; i++) if(data.states?.[`relay${i}`] === true) onCount++;
             document.getElementById('sw-on-count').innerText = onCount;
-            document.getElementById('sw-off-count').innerText = 8 - onCount;
 
-            // Security UI
+            // Eco Mode UI
+            const isEco = data.states?.eco_mode === true;
+            const ecoBtn = document.getElementById('btn-eco-toggle');
+            ecoBtn.innerText = `Eco Mode: ${isEco ? 'ON' : 'OFF'}`;
+            ecoBtn.className = `px-3 py-1.5 border rounded-full text-[8px] font-black uppercase transition-all ${isEco ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400' : 'bg-blue-500/10 border-blue-500/20 text-blue-400'}`;
+
+            // Door UI
             const dOn = data.states?.door === true;
-            document.getElementById('door-status-text').innerText = dOn ? "Sistem Pintu: Terbuka" : "Sistem Pintu: Terkunci Aman";
-            document.getElementById('insight-door-status').innerText = dOn ? "Unlocked" : "Locked";
-            document.getElementById('insight-door-status').className = `text-sm font-black uppercase ${dOn ? 'text-red-400' : 'text-blue-400'}`;
-            document.getElementById('btn-toggle-door').onclick = () => set(ref(db, `nexhome_v3/states/door`), !dOn);
+            document.getElementById('insight-door-status').innerText = dOn ? "Open" : "Locked";
+            document.getElementById('insight-door-status').className = `text-xs font-black uppercase ${dOn ? 'text-red-400' : 'text-blue-400'}`;
 
-            // Control Grid
+            // Switches Grid
             const grid = document.getElementById('grid-switches');
             grid.innerHTML = '';
             for(let i=1; i<=8; i++){
@@ -484,20 +414,15 @@
                 card.className = `glass p-4 rounded-3xl transition-all border-l-4 ${isOn ? 'bg-blue-600/10 border-blue-500' : 'border-slate-800'}`;
                 card.innerHTML = `<p class="text-[9px] font-black uppercase truncate">${name}</p><div class="flex justify-between items-center mt-2"><span class="text-[7px] font-bold text-slate-600 uppercase">RLY-${i}</span><div class="w-7 h-4 bg-slate-900 rounded-full relative"><div class="absolute w-2.5 h-2.5 bg-white rounded-full top-0.5 transition-all ${isOn ? 'right-0.5 bg-blue-400' : 'left-0.5'}"></div></div></div>`;
                 card.onclick = () => set(ref(db, `nexhome_v3/states/relay${i}`), !isOn);
-                let timer;
-                card.onmousedown = card.ontouchstart = () => timer = setTimeout(() => openModal(i, name, data.schedules?.[`relay${i}`]), 800);
-                card.onmouseup = card.onmouseleave = card.ontouchend = () => clearTimeout(timer);
                 grid.appendChild(card);
             }
-
-            // Sync AI Suggestion
-            getActionSaran();
+            getFriendlySaran();
         });
 
         onValue(ref(db, ".info/connected"), s => { 
             const isConn = s.val();
             document.getElementById('cloud-dot').className = isConn ? "w-1.5 h-1.5 rounded-full bg-emerald-500" : "w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"; 
-            logMini(isConn ? "Sistem Terhubung" : "Koneksi Terputus");
+            document.getElementById('log-text').innerText = isConn ? "Gemini Engine Siap" : "Menghubungkan Ulang...";
         });
     </script>
 </body>
