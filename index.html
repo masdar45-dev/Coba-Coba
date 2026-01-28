@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NexHome Masdar V4.2.7</title>
+    <title>NexHome Masdar V4.2.8</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -44,7 +44,7 @@
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             </div>
             <h1 class="text-2xl font-extrabold tracking-tighter uppercase">NexHome Masdar</h1>
-            <p class="text-slate-500 text-[10px] mt-2 uppercase tracking-[0.3em] font-bold italic">Secure Environment</p>
+            <p class="text-slate-500 text-[10px] mt-2 uppercase tracking-[0.3em] font-bold">Secure Voice System</p>
         </div>
         
         <div class="flex mb-16">
@@ -70,7 +70,7 @@
             <h1 class="text-lg font-black italic">NexHome <span class="text-blue-400">Masdar</span></h1>
             <div class="flex items-center gap-2">
                 <div id="cloud-dot" class="w-2 h-2 rounded-full bg-red-500"></div>
-                <span class="text-[9px] font-bold text-slate-500 uppercase">Kradenan, Blora</span>
+                <span class="text-[9px] font-bold text-slate-500 uppercase">Blora, Jawa Tengah</span>
             </div>
         </div>
         <div class="text-right">
@@ -95,7 +95,7 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                 </div>
                 <div>
-                    <p class="text-[8px] font-bold text-slate-500 uppercase">Status Pintu</p>
+                    <p class="text-[8px] font-bold text-slate-500 uppercase">Pintu</p>
                     <p id="summary-door-text" class="text-xs font-black uppercase">Terkunci</p>
                 </div>
             </div>
@@ -103,13 +103,19 @@
 
         <div class="grid grid-cols-2 gap-3">
             <div class="glass p-4 rounded-[2rem]">
-                <p class="text-[9px] font-bold text-slate-500 uppercase">Suhu Ruang</p>
+                <p class="text-[9px] font-bold text-slate-500 uppercase">Suhu</p>
                 <p class="text-2xl font-black mt-1"><span id="temp">--</span><span class="text-orange-400 text-xs ml-1">°C</span></p>
             </div>
             <div class="glass p-4 rounded-[2rem]">
-                <p class="text-[9px] font-bold text-slate-500 uppercase">Level Air</p>
-                <p class="text-2xl font-black mt-1"><span id="water-val">--</span><span class="text-blue-400 text-xs ml-1">%</span></p>
+                <p class="text-[9px] font-bold text-slate-500 uppercase">Lembab</p>
+                <p class="text-2xl font-black mt-1"><span id="hum">--</span><span class="text-blue-400 text-xs ml-1">%</span></p>
             </div>
+        </div>
+
+        <div class="glass p-4 rounded-[2rem] flex flex-col items-center justify-center relative overflow-hidden h-24">
+            <p class="text-[9px] font-bold text-slate-500 uppercase absolute top-4 left-4">Level Air</p>
+            <p class="text-3xl font-black z-10"><span id="water-val">--</span><span class="text-blue-400 text-sm ml-1">%</span></p>
+            <div id="water-bar-bg" class="absolute bottom-0 left-0 right-0 bg-blue-500/20 transition-all duration-1000" style="height: 0%"></div>
         </div>
 
         <div class="glass p-5 rounded-[2.5rem]">
@@ -162,7 +168,7 @@
         let pinInput = "";
         const CORRECT_PIN = "1234";
 
-        // Logic PIN
+        // PIN Login
         window.pressPin = (num) => {
             if(pinInput.length < 4) {
                 pinInput += num;
@@ -171,7 +177,7 @@
                     setTimeout(() => {
                         document.getElementById('login-screen').style.transform = 'translateY(-100%)';
                         document.getElementById('btn-voice').style.display = 'flex';
-                        speak("Akses diterima. Selamat datang.");
+                        speak("Akses diterima. Selamat datang di NexHome Masdar.");
                     }, 300);
                 } else if(pinInput.length === 4) {
                     setTimeout(() => { pinInput = ""; for(let i=0; i<4; i++) document.getElementById(`dot-${i}`).className = 'pin-dot'; speak("Pin salah."); }, 200);
@@ -200,7 +206,7 @@
         const overlay = document.getElementById('voice-overlay');
 
         micBtn.onclick = () => {
-            if (!recognition) { speak("Pengenalan suara tidak didukung."); return; }
+            if (!recognition) { speak("Browser tidak mendukung suara."); return; }
             try { recognition.start(); micBtn.classList.add('mic-active'); overlay.style.display = 'block'; } catch(e) { recognition.stop(); }
         };
 
@@ -213,62 +219,62 @@
         }
 
         function processCmd(cmd) {
-            console.log("Diterima:", cmd);
-            const numMap = { 
-                'satu': 1, '1': 1, 'dua': 2, '2': 2, 'tiga': 3, '3': 3, 'empat': 4, '4': 4, 
-                'lima': 5, '5': 5, 'enam': 6, '6': 6, 'tujuh': 7, '7': 7, 'delapan': 8, '8': 8 
-            };
+            console.log("Perintah Suara:", cmd);
+            const numMap = { 'satu': 1, '1': 1, 'dua': 2, '2': 2, 'tiga': 3, '3': 3, 'empat': 4, '4': 4, 'lima': 5, '5': 5, 'enam': 6, '6': 6, 'tujuh': 7, '7': 7, 'delapan': 8, '8': 8 };
             
-            let handled = false;
-
-            // Global Control: Semua Lampu
-            if (cmd.includes('nyalakan semua') || cmd.includes('hidupkan semua')) {
+            // 1. KONTROL SEMUA LAMPU
+            if (cmd.includes('semua lampu')) {
+                const state = cmd.includes('nyala') || cmd.includes('hidup') || cmd.includes('aktif');
                 const updates = {};
-                for(let i=1; i<=8; i++) updates[`nexhome_v3/states/relay${i}`] = true;
+                for(let i=1; i<=8; i++) updates[`nexhome_v3/states/relay${i}`] = state;
                 update(ref(db), updates);
-                speak("Semua lampu dinyalakan.");
-                return;
-            }
-            if (cmd.includes('matikan semua') || cmd.includes('padamkan semua')) {
-                const updates = {};
-                for(let i=1; i<=8; i++) updates[`nexhome_v3/states/relay${i}`] = false;
-                update(ref(db), updates);
-                speak("Semua lampu dimatikan.");
+                speak(`Semua lampu telah ${state ? 'dinyalakan' : 'dimatikan'}.`);
                 return;
             }
 
-            // Individual Control: Lampu 1-8
+            // 2. KONTROL INDIVIDU LAMPU
             for (let key in numMap) {
                 if (cmd.includes(`lampu ${key}`)) {
                     const relayId = numMap[key];
-                    const isOn = cmd.includes('nyala') || cmd.includes('hidup') || cmd.includes('aktif');
-                    const isOff = cmd.includes('mati') || cmd.includes('padam') || cmd.includes('nonaktif');
-                    
-                    if (isOn) {
-                        set(ref(db, `nexhome_v3/states/relay${relayId}`), true);
-                        speak(`Lampu ${key} dinyalakan.`);
-                        handled = true; break;
-                    } else if (isOff) {
-                        set(ref(db, `nexhome_v3/states/relay${relayId}`), false);
-                        speak(`Lampu ${key} dimatikan.`);
-                        handled = true; break;
-                    }
+                    const state = cmd.includes('nyala') || cmd.includes('hidup') || cmd.includes('aktif');
+                    set(ref(db, `nexhome_v3/states/relay${relayId}`), state);
+                    speak(`Lampu ${key} ${state ? 'dinyalakan' : 'dimatikan'}.`);
+                    return;
                 }
             }
 
-            if (!handled) {
-                if (cmd.includes('buka pintu')) {
-                    set(ref(db, `nexhome_v3/states/door`), true);
-                    speak("Pintu dibuka.");
-                } else if (cmd.includes('kunci pintu')) {
-                    set(ref(db, `nexhome_v3/states/door`), false);
-                    speak("Pintu dikunci.");
-                } else if (cmd.includes('suhu')) {
-                    speak(`Suhu saat ini ${document.getElementById('temp').innerText} derajat.`);
-                } else {
-                    speak("Perintah tidak dimengerti.");
+            // 3. KONTROL PINTU (Improved Keywords)
+            if (cmd.includes('buka') && (cmd.includes('pintu') || cmd.includes('kunci') || cmd.includes('akses'))) {
+                set(ref(db, `nexhome_v3/states/door`), true);
+                speak("Pintu telah dibuka.");
+                return;
+            }
+            if ((cmd.includes('tutup') || cmd.includes('kunci')) && (cmd.includes('pintu') || cmd.includes('kunci'))) {
+                set(ref(db, `nexhome_v3/states/door`), false);
+                speak("Pintu telah dikunci.");
+                return;
+            }
+
+            // 4. CEK SENSOR (Improved Keywords)
+            if (cmd.includes('cek') || cmd.includes('berapa') || cmd.includes('status')) {
+                if (cmd.includes('suhu') || cmd.includes('temperatur')) {
+                    const val = document.getElementById('temp').innerText;
+                    speak(`Suhu ruangan saat ini adalah ${val} derajat.`);
+                    return;
+                }
+                if (cmd.includes('lembab') || cmd.includes('kelembaban')) {
+                    const val = document.getElementById('hum').innerText;
+                    speak(`Kelembaban udara saat ini adalah ${val} persen.`);
+                    return;
+                }
+                if (cmd.includes('air') || cmd.includes('tandon') || cmd.includes('bak')) {
+                    const val = document.getElementById('water-val').innerText;
+                    speak(`Level air saat ini adalah ${val} persen.`);
+                    return;
                 }
             }
+
+            speak("Maaf, perintah tidak dikenali. Coba lagi.");
         }
 
         window.switchTab = (id) => {
@@ -288,7 +294,10 @@
             const data = snap.val();
             if(!data) return;
             document.getElementById('temp').innerText = data.sensors?.temperature ?? "--";
-            document.getElementById('water-val').innerText = data.sensors?.water_level ?? "--";
+            document.getElementById('hum').innerText = data.sensors?.humidity ?? "--";
+            const water = data.sensors?.water_level ?? 0;
+            document.getElementById('water-val').innerText = water;
+            document.getElementById('water-bar-bg').style.height = `${water}%`;
             document.getElementById('summary-door-text').innerText = data.states?.door ? "Terbuka" : "Terkunci";
 
             const grid = document.getElementById('grid-switches');
@@ -299,7 +308,7 @@
                 if(isOn) active++;
                 const card = document.createElement('div');
                 card.className = `glass p-4 rounded-2xl ${isOn ? 'bg-blue-500/10 border-blue-500/40' : ''}`;
-                card.innerHTML = `<p class="text-[10px] font-bold">${data.names?.[`relay${i}`] || 'Lampu '+i}</p><p class="text-[8px] mt-1 ${isOn?'text-blue-400':'text-slate-500'}">${isOn?'ON':'OFF'}</p>`;
+                card.innerHTML = `<p class="text-[10px] font-bold">${data.names?.[`relay${i}`] || 'Lampu '+i}</p><p class="text-[8px] mt-1 ${isOn?'text-blue-400 font-bold':'text-slate-500'}">${isOn?'HIDUP':'MATI'}</p>`;
                 card.onclick = () => set(ref(db, `nexhome_v3/states/relay${i}`), !isOn);
                 grid.appendChild(card);
             }
@@ -307,7 +316,7 @@
         });
 
         setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('id-ID', { hour12: false }); }, 1000);
-        onValue(ref(db, ".info/connected"), s => { document.getElementById('cloud-dot').className = s.val() ? "w-2 h-2 rounded-full bg-emerald-500" : "w-2 h-2 rounded-full bg-red-500 animate-pulse"; });
+        onValue(ref(db, ".info/connected"), s => { document.getElementById('cloud-dot').className = s.val() ? "w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" : "w-2 h-2 rounded-full bg-red-500 animate-pulse"; });
     </script>
 </body>
 </html>
