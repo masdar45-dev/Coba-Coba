@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NexHome Masdar V4.6.0</title>
+    <title>NexHome Masdar V4.6.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -14,55 +14,82 @@
         .tab-content.active { display: flex; flex-direction: column; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         
+        /* Eco Mode Effects */
+        .eco-on { background: rgba(16, 185, 129, 0.2) !important; border-color: #10b981 !important; color: #10b981 !important; box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); animation: pulse-green 2s infinite; }
+        .eco-off { background: rgba(56, 189, 248, 0.05) !important; border-color: rgba(255,255,255,0.1) !important; color: #94a3b8 !important; }
+        @keyframes pulse-green { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+
         #login-screen { position: fixed; inset: 0; background: #0f172a; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
         .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #38bdf8; margin: 0 10px; transition: 0.3s; }
         .pin-dot.filled { background: #38bdf8; box-shadow: 0 0 10px #38bdf8; transform: scale(1.2); }
         
-        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
-        .mic-active { animation: pulse-red 1.5s infinite; background-color: #ef4444 !important; }
-        
-        #voice-overlay { position: fixed; top: 15%; left: 50%; transform: translateX(-50%); background: rgba(56, 189, 248, 0.95); padding: 8px 20px; border-radius: 50px; font-size: 10px; font-weight: 800; text-transform: uppercase; z-index: 1000; display: none; color: #0f172a; }
-        
-        .chat-bubble { max-width: 85%; padding: 12px 16px; border-radius: 20px; font-size: 13px; margin-bottom: 12px; line-height: 1.4; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: #1e293b; border-radius: 2.5rem; width: 100%; max-width: 360px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
+
+        .switch-input { display: none; }
+        .switch-label { width: 42px; height: 22px; background: #334155; border-radius: 50px; position: relative; cursor: pointer; transition: 0.3s; }
+        .switch-label::after { content: ''; position: absolute; width: 18px; height: 18px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: 0.3s; }
+        .switch-input:checked + .switch-label { background: #38bdf8; }
+        .switch-input:checked + .switch-label::after { left: 22px; }
+
+        .chat-bubble { max-width: 85%; padding: 12px 16px; border-radius: 20px; font-size: 13px; margin-bottom: 12px; }
         .chat-user { background: #38bdf8; color: #0f172a; align-self: flex-end; border-bottom-right-radius: 4px; font-weight: 600; }
         .chat-ai { background: rgba(255,255,255,0.05); color: #f8fafc; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid rgba(255,255,255,0.1); }
-        
-        .fade-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Glass Modal */
-        #modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); z-index: 300; display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
-        #modal.active { display: flex; }
     </style>
 </head>
 <body class="flex flex-col">
 
-    <div id="voice-overlay">Mendengarkan...</div>
+    <!-- Modal Pengaturan (Long Press) -->
+    <div id="modal-settings" class="modal-overlay">
+        <div class="modal-content p-6 flex flex-col gap-5">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h2 class="text-xs font-black uppercase text-blue-400">Pengaturan Perangkat</h2>
+                    <p id="modal-relay-id" class="text-[10px] font-bold text-slate-500 uppercase">RLY-X</p>
+                </div>
+                <button onclick="closeModal()" class="text-2xl text-slate-500">&times;</button>
+            </div>
+            <div class="space-y-2">
+                <label class="text-[8px] font-black uppercase text-slate-500 ml-1">Nama Perangkat</label>
+                <input type="text" id="input-relay-name" class="w-full bg-slate-900 border border-white/5 rounded-2xl p-4 text-sm font-bold focus:border-blue-500 outline-none">
+            </div>
+            <div class="space-y-3 p-4 bg-slate-900/50 rounded-3xl border border-white/5">
+                <div class="flex justify-between items-center mb-1">
+                    <label class="text-[8px] font-black uppercase text-slate-400">Aktifkan Penjadwalan</label>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="switch-schedule-active" class="switch-input">
+                        <label for="switch-schedule-active" class="switch-label"></label>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <div class="bg-slate-900 p-3 rounded-2xl border border-white/5">
+                        <p class="text-[7px] font-black text-emerald-400 uppercase mb-1">Waktu ON</p>
+                        <input type="time" id="input-schedule-on" class="bg-transparent text-xs font-bold w-full outline-none">
+                    </div>
+                    <div class="bg-slate-900 p-3 rounded-2xl border border-white/5">
+                        <p class="text-[7px] font-black text-red-400 uppercase mb-1">Waktu OFF</p>
+                        <input type="time" id="input-schedule-off" class="bg-transparent text-xs font-bold w-full outline-none">
+                    </div>
+                </div>
+            </div>
+            <button onclick="saveRelaySettings()" class="bg-blue-600 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest">Simpan Perubahan</button>
+        </div>
+    </div>
 
     <!-- Login Screen -->
     <div id="login-screen">
         <div class="mb-10 text-center">
-            <div class="w-20 h-20 bg-blue-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-blue-500/20">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
-            </div>
             <h1 class="text-2xl font-black italic uppercase">NexHome <span class="text-blue-400">Masdar</span></h1>
-            <p class="text-slate-500 text-[10px] mt-2 uppercase tracking-[0.3em] font-bold">V4.6.0 Gemini Experience</p>
+            <p class="text-slate-500 text-[10px] mt-2 uppercase tracking-[0.3em] font-bold">V4.6.5 Secure OS</p>
         </div>
-        
         <div class="flex mb-16">
-            <div class="pin-dot" id="dot-0"></div>
-            <div class="pin-dot" id="dot-1"></div>
-            <div class="pin-dot" id="dot-2"></div>
-            <div class="pin-dot" id="dot-3"></div>
+            <script>for(let i=0; i<4; i++) document.write(`<div class="pin-dot" id="dot-${i}"></div>`);</script>
         </div>
-
         <div class="grid grid-cols-3 gap-6">
             <script>
                 for(let i=1; i<=9; i++) document.write(`<button onclick="pressPin('${i}')" class="w-16 h-16 rounded-full glass text-xl font-bold active:scale-90 transition-all">${i}</button>`);
+                document.write(`<div></div><button onclick="pressPin('0')" class="w-16 h-16 rounded-full glass text-xl font-bold active:scale-90">0</button><button onclick="clearPin()" class="text-red-500 text-[10px] font-black uppercase">Reset</button>`);
             </script>
-            <div></div>
-            <button onclick="pressPin('0')" class="w-16 h-16 rounded-full glass text-xl font-bold active:scale-90">0</button>
-            <button onclick="clearPin()" class="text-red-500 text-[10px] font-black uppercase">Reset</button>
         </div>
     </div>
 
@@ -73,33 +100,22 @@
                 <h1 class="text-base font-black italic uppercase">NexHome <span class="text-blue-400">Masdar</span></h1>
                 <div class="flex items-center gap-1.5">
                     <div id="cloud-dot" class="w-1.5 h-1.5 rounded-full bg-red-500"></div>
-                    <span class="text-[8px] font-bold text-slate-500 uppercase tracking-widest">AI Asisten Aktif</span>
+                    <span class="text-[8px] font-bold text-slate-500 uppercase tracking-widest italic">Cloud Connected</span>
                 </div>
             </div>
-            <button id="btn-eco-toggle" onclick="toggleEcoMode()" class="px-3 py-1.5 border rounded-full text-[8px] font-black uppercase transition-all">Eco Mode: --</button>
-        </div>
-        
-        <div class="w-full py-1.5 px-3 bg-white/5 border border-white/5 rounded-lg flex items-center gap-2 h-7 overflow-hidden">
-            <span class="text-[8px] font-black text-blue-400 uppercase italic shrink-0">Status AI:</span>
-            <div id="log-text" class="text-[8px] font-bold text-slate-400 uppercase truncate">Menyiapkan sistem Gemini...</div>
+            <button id="btn-eco-toggle" onclick="toggleEcoMode()" class="px-4 py-2 border rounded-full text-[9px] font-black uppercase transition-all duration-300 eco-off">
+                ECO MODE: --
+            </button>
         </div>
     </header>
 
     <!-- Main -->
     <main class="flex-1 relative overflow-hidden">
         
-        <!-- ASISTEN AI -->
+        <!-- ASISTEN -->
         <div id="tab-ai" class="tab-content active p-5 scrollbar-hide">
             <div class="flex-1 flex flex-col space-y-4 overflow-y-auto" id="chat-container">
-                <div class="chat-bubble chat-ai">Halo Masdar! Senang melihatmu kembali. Apa yang bisa aku bantu hari ini?</div>
-            </div>
-            <!-- Gemini Suggestion Box -->
-            <div id="ai-suggestion" class="mt-4 p-4 glass rounded-2xl border-l-4 border-blue-400 hidden fade-in">
-                <div class="flex items-center gap-2 mb-1">
-                    <div class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
-                    <p class="text-[8px] font-black text-blue-400 uppercase italic">Pikiran Gemini:</p>
-                </div>
-                <p id="suggestion-text" class="text-[11px] font-medium text-slate-300 leading-relaxed italic">Menganalisis data rumah...</p>
+                <div class="chat-bubble chat-ai italic">Siap melayani, Masdar. Ada instruksi untuk sistem rumah hari ini?</div>
             </div>
         </div>
 
@@ -115,17 +131,18 @@
                 </div>
                 <div class="glass p-4 rounded-3xl">
                     <p class="text-[8px] font-bold text-slate-500 uppercase mb-2">Udara (PPM)</p>
-                    <p id="air-status" class="text-sm font-black uppercase text-emerald-400">Sehat</p>
+                    <p id="air-status" class="text-sm font-black uppercase text-emerald-400">Baik</p>
                     <p class="text-[8px] text-slate-500 mt-1"><span id="air-val">--</span> PPM</p>
                 </div>
             </div>
-            
+
             <div class="glass p-6 rounded-[2.5rem] relative overflow-hidden h-36 flex flex-col justify-end">
-                <p class="text-[8px] font-black text-slate-500 uppercase absolute top-6 left-6">Level Air Tandon</p>
+                <p class="text-[8px] font-black text-slate-500 uppercase absolute top-6 left-6">Water Level</p>
                 <p class="text-4xl font-black z-10"><span id="water-val">--</span><span class="text-blue-400 text-lg ml-1">%</span></p>
                 <div id="water-wave" class="absolute bottom-0 left-0 right-0 bg-blue-500/20 transition-all duration-1000" style="height: 0%"></div>
             </div>
 
+            <!-- KEMBALI: Status Ringkasan -->
             <div class="grid grid-cols-2 gap-3">
                 <div class="glass p-4 rounded-3xl text-center">
                     <p class="text-[8px] font-bold text-slate-500 uppercase mb-1">Lampu Aktif</p>
@@ -133,18 +150,39 @@
                 </div>
                 <div class="glass p-4 rounded-3xl text-center">
                     <p class="text-[8px] font-bold text-slate-500 uppercase mb-1">Pintu Utama</p>
-                    <p id="insight-door-status" class="text-xs font-black uppercase">Locked</p>
+                    <p id="dash-door-status" class="text-[10px] font-black uppercase text-blue-400">Locked</p>
                 </div>
             </div>
         </div>
 
         <!-- KONTROL -->
         <div id="tab-control" class="tab-content p-5 scrollbar-hide">
-            <div class="flex gap-2 mb-4">
-                <button onclick="setAllRelays(true)" class="flex-1 p-3 glass rounded-2xl text-[8px] font-black uppercase text-blue-400 border border-blue-500/20">Nyalakan Semua</button>
-                <button onclick="setAllRelays(false)" class="flex-1 p-3 glass rounded-2xl text-[8px] font-black uppercase text-slate-400 border border-white/5">Matikan Semua</button>
+            <div class="mb-6">
+                <p class="text-[8px] font-black text-slate-500 uppercase mb-3 ml-1">Keamanan Pintu</p>
+                <div id="door-card" class="glass p-5 rounded-[2rem] flex items-center justify-between border-l-4 border-blue-500">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-blue-400"><path d="M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16M15 11h.01"></path></svg>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-black uppercase">Pintu Utama</p>
+                            <p id="door-status-text" class="text-[8px] font-bold text-slate-500 uppercase">Checking...</p>
+                        </div>
+                    </div>
+                    <button id="btn-door-toggle" class="px-5 py-2.5 rounded-2xl bg-blue-600 text-[9px] font-black uppercase">Aksi</button>
+                </div>
             </div>
+
+            <p class="text-[8px] font-black text-slate-500 uppercase mb-3 ml-1">Kontrol Perangkat</p>
+            
+            <!-- KEMBALI: Kontrol Massal -->
+            <div class="flex gap-2 mb-4">
+                <button onclick="setAllRelays(true)" class="flex-1 py-3 glass rounded-2xl text-[8px] font-black uppercase text-blue-400 border-blue-500/20 border">On Semua</button>
+                <button onclick="setAllRelays(false)" class="flex-1 py-3 glass rounded-2xl text-[8px] font-black uppercase text-slate-400 border-white/5 border">Off Semua</button>
+            </div>
+
             <div id="grid-switches" class="grid grid-cols-2 gap-3"></div>
+            <p class="text-center text-[7px] font-bold text-slate-600 uppercase mt-8 italic">Tekan lama kartu saklar untuk ganti nama/jadwal</p>
         </div>
     </main>
 
@@ -152,22 +190,17 @@
     <nav class="fixed bottom-0 left-0 right-0 glass h-20 flex items-center justify-around px-4 pb-4 z-50 rounded-t-[2.5rem]">
         <button onclick="switchTab('ai')" id="nav-ai" class="flex flex-col items-center gap-1 text-blue-400">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-            <span class="text-[7px] font-black uppercase tracking-widest">Gemini</span>
+            <span class="text-[7px] font-black uppercase tracking-widest">Asisten</span>
         </button>
         <button onclick="switchTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center gap-1 text-slate-600">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
-            <span class="text-[7px] font-black uppercase tracking-widest">Monitor</span>
+            <span class="text-[7px] font-black uppercase tracking-widest">Dash</span>
         </button>
         <button onclick="switchTab('control')" id="nav-control" class="flex flex-col items-center gap-1 text-slate-600">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect><polyline points="17 2 12 7 7 2"></polyline></svg>
             <span class="text-[7px] font-black uppercase tracking-widest">Kontrol</span>
         </button>
     </nav>
-
-    <!-- Voice Trigger -->
-    <button id="btn-voice" class="fixed bottom-24 right-6 w-14 h-14 bg-blue-600 rounded-full hidden items-center justify-center shadow-2xl z-[100] border-4 border-slate-900 active:scale-95">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>
-    </button>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -184,105 +217,17 @@
         const db = getDatabase(app);
         const rootRef = ref(db, "nexhome_v3");
 
-        let currentNames = {};
-        let currentStates = {};
-        let currentSensors = {};
-        let pinInput = "";
+        let currentNames = {}, currentStates = {}, currentSchedules = {};
+        let selectedRelayId = null, pinInput = "", pressTimer = null;
         const CORRECT_PIN = "1234";
 
-        // --- GEMINI STYLE SPEECH ---
-        function speakGemini(text, skipChat = false) {
-            window.speechSynthesis.cancel();
-            const msg = new SpeechSynthesisUtterance(text);
-            msg.lang = 'id-ID';
-            msg.pitch = 1.1; // Sedikit lebih tinggi agar ramah
-            msg.rate = 1.0;  // Kecepatan natural
-            window.speechSynthesis.speak(msg);
-            if(!skipChat) addChatMessage(text, 'ai');
-        }
-
-        function addChatMessage(text, role) {
-            const container = document.getElementById('chat-container');
-            const div = document.createElement('div');
-            div.className = `chat-bubble ${role === 'user' ? 'chat-user' : 'chat-ai'} fade-in`;
-            div.innerText = text;
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
-        }
-
-        // --- LOGIKA NARASI GEMINI ---
-        function generateGeminiReport() {
-            const { temperature, humidity, air_quality, water_level } = currentSensors;
-            const greetings = ["Oke Masdar, ini laporan rumahmu.", "Tentu, mari kita cek kondisi rumah saat ini.", "Rumahmu dalam pantauanku, begini kondisinya."];
-            const greeting = greetings[Math.floor(Math.random() * greetings.length)];
-            
-            let sentences = [greeting];
-
-            // Narasi Suhu
-            if(temperature) {
-                if(temperature < 23) sentences.push(`Di sini suhunya cukup adem, sekitar ${temperature} derajat.`);
-                else if(temperature > 30) sentences.push(`Lagi agak gerah ya Masdar, suhunya menyentuh ${temperature} derajat.`);
-                else sentences.push(`Suhu ruangan sangat nyaman di angka ${temperature} derajat.`);
-            }
-
-            // Narasi Udara
-            if(air_quality) {
-                const airTxt = air_quality < 50 ? "segar banget" : (air_quality < 100 ? "masih aman" : "agak pengap");
-                sentences.push(`Kualitas udaranya ${airTxt} dengan kadar ${air_quality} PPM.`);
-            }
-
-            // Narasi Air
-            if(water_level !== undefined) {
-                if(water_level < 20) sentences.push(`Oh ya, air tandonmu sisa ${water_level} persen lagi, jangan sampai kehabisan ya.`);
-                else sentences.push(`Persediaan air tandon aman di level ${water_level} persen.`);
-            }
-
-            // Narasi Perangkat
-            let onCount = 0;
-            for(let i=1; i<=8; i++) if(currentStates[`relay${i}`]) onCount++;
-            if(onCount > 0) sentences.push(`Ada ${onCount} perangkat yang masih menyala.`);
-            else sentences.push(`Semua perangkat dalam keadaan mati.`);
-
-            // Pintu
-            sentences.push(`Dan untuk pintu utama, statusnya ${currentStates.door ? 'masih terbuka' : 'sudah terkunci aman'}.`);
-
-            return sentences.join(" ");
-        }
-
-        function getFriendlySaran() {
-            const { temperature, humidity, air_quality, water_level } = currentSensors;
-            let sarans = [];
-
-            if (temperature < 22) sarans.push("Masdar, suhunya lagi dingin nih, jangan lupa pakai jaket ya kalau mau keluar.");
-            if (humidity > 75) sarans.push("Udaranya agak lembab, mungkin jendela bisa dibuka sebentar supaya lebih segar.");
-            if (air_quality > 100) sarans.push("Kualitas udara lagi kurang bagus, sebaiknya nyalakan air purifier atau tutup jendela dulu.");
-            if (water_level < 20) sarans.push("Cek tandon air ya, levelnya sudah sangat rendah.");
-
-            const box = document.getElementById('ai-suggestion');
-            const txt = document.getElementById('suggestion-text');
-            
-            if (sarans.length > 0) {
-                box.classList.remove('hidden');
-                txt.innerText = sarans[0];
-                return sarans[0];
-            } else {
-                box.classList.add('hidden');
-                return "Semua sensor menunjukkan kondisi ideal. Masdar bisa bersantai dengan tenang!";
-            }
-        }
-
-        // --- AUTH & UI ---
-        window.pressPin = (num) => {
+        // --- AUTH ---
+        window.pressPin = (n) => {
             if(pinInput.length < 4) {
-                pinInput += num;
+                pinInput += n;
                 for(let i=0; i<4; i++) document.getElementById(`dot-${i}`).className = `pin-dot ${pinInput.length > i ? 'filled' : ''}`;
                 if(pinInput === CORRECT_PIN) {
-                    setTimeout(() => {
-                        document.getElementById('login-screen').style.transform = 'translateY(-100%)';
-                        document.getElementById('btn-voice').style.display = 'flex';
-                        switchTab('ai'); 
-                        speakGemini(`Halo Masdar! Akses diterima. ${getFriendlySaran()}`, true);
-                    }, 300);
+                    setTimeout(() => { document.getElementById('login-screen').style.transform = 'translateY(-100%)'; switchTab('ai'); }, 300);
                 } else if(pinInput.length === 4) {
                     setTimeout(() => { pinInput = ""; for(let i=0; i<4; i++) document.getElementById(`dot-${i}`).className = 'pin-dot'; }, 200);
                 }
@@ -290,140 +235,120 @@
         };
         window.clearPin = () => { pinInput = ""; for(let i=0; i<4; i++) document.getElementById(`dot-${i}`).className = 'pin-dot'; };
 
-        // --- VOICE LOGIC ---
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const recognition = SpeechRecognition ? new SpeechRecognition() : null;
-        if(recognition) {
-            recognition.lang = 'id-ID';
-            recognition.onresult = (e) => {
-                const cmd = e.results[0][0].transcript.toLowerCase();
-                addChatMessage(cmd, 'user');
-                processGeminiCmd(cmd);
-            };
-            recognition.onend = () => { 
-                document.getElementById('btn-voice').classList.remove('mic-active'); 
-                document.getElementById('voice-overlay').style.display='none'; 
-            };
-        }
-
-        document.getElementById('btn-voice').onclick = () => {
-            try { recognition.start(); document.getElementById('btn-voice').classList.add('mic-active'); document.getElementById('voice-overlay').style.display='block'; } catch(e) { recognition.stop(); }
-        };
-
-        function processGeminiCmd(cmd) {
-            if (cmd.includes('status') || cmd.includes('laporan') || cmd.includes('gimana kondisi')) {
-                speakGemini(generateGeminiReport());
-                return;
-            }
-
-            if (cmd.includes('semua') || cmd.includes('seluruh')) {
-                const turnOn = cmd.includes('nyala') || cmd.includes('hidup');
-                setAllRelays(turnOn);
-                const resp = turnOn ? "Beres! Semua perangkat sudah aku nyalakan." : "Siap Masdar, semuanya sudah aku matikan ya.";
-                speakGemini(resp);
-                return;
-            }
-
-            if (cmd.includes('hemat')) {
-                toggleEcoMode();
-                return;
-            }
-
-            if (cmd.includes('pintu')) {
-                const s = cmd.includes('buka');
-                set(ref(db, `nexhome_v3/states/door`), s);
-                speakGemini(s ? "Pintu utama sudah aku buka ya." : "Oke, pintu utama sekarang terkunci rapat.");
-                return;
-            }
-
-            // Individual Control
-            let handled = false;
-            for (let i = 1; i <= 8; i++) {
-                const name = (currentNames[`relay${i}`] || "").toLowerCase();
-                if (name && cmd.includes(name)) {
-                    const state = cmd.includes('nyala') || cmd.includes('hidup');
-                    set(ref(db, `nexhome_v3/states/relay${i}`), state);
-                    speakGemini(`Siap, ${name} sudah ${state ? 'nyala' : 'mati'}.`);
-                    handled = true;
-                    break;
+        // --- SCHEDULER ---
+        setInterval(() => {
+            const now = new Date();
+            const time = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+            for(let i=1; i<=8; i++) {
+                const id = `relay${i}`, s = currentSchedules[id];
+                if(s && s.active) {
+                    if(s.on === time && !currentStates[id]) set(ref(db, `nexhome_v3/states/${id}`), true);
+                    if(s.off === time && currentStates[id]) set(ref(db, `nexhome_v3/states/${id}`), false);
                 }
             }
-            if(!handled) speakGemini("Maaf Masdar, aku kurang mengerti. Bisa diulangi?");
-        }
+        }, 30000);
 
-        window.setAllRelays = (state) => {
-            const updates = {};
-            for(let i=1; i<=8; i++) updates[`nexhome_v3/states/relay${i}`] = state;
-            update(ref(db), updates);
+        // --- MODAL ---
+        window.openSettings = (id) => {
+            selectedRelayId = id;
+            const rIdx = id.replace('relay', '');
+            document.getElementById('modal-relay-id').innerText = `KONFIGURASI RLY-${rIdx}`;
+            document.getElementById('input-relay-name').value = currentNames[id] || `Saklar ${rIdx}`;
+            const s = currentSchedules[id] || { on: '', off: '', active: false };
+            document.getElementById('input-schedule-on').value = s.on || '';
+            document.getElementById('input-schedule-off').value = s.off || '';
+            document.getElementById('switch-schedule-active').checked = s.active || false;
+            document.getElementById('modal-settings').style.display = 'flex';
+        };
+
+        window.closeModal = () => document.getElementById('modal-settings').style.display = 'none';
+
+        window.saveRelaySettings = () => {
+            const up = {};
+            up[`nexhome_v3/names/${selectedRelayId}`] = document.getElementById('input-relay-name').value;
+            up[`nexhome_v3/schedules/${selectedRelayId}`] = {
+                on: document.getElementById('input-schedule-on').value,
+                off: document.getElementById('input-schedule-off').value,
+                active: document.getElementById('switch-schedule-active').checked
+            };
+            update(ref(db), up);
+            closeModal();
+        };
+
+        // --- SYNC ---
+        onValue(rootRef, snap => {
+            const data = snap.val() || {};
+            currentStates = data.states || {};
+            currentNames = data.names || {};
+            currentSchedules = data.schedules || {};
+            const sensors = data.sensors || {};
+
+            // Sensors
+            document.getElementById('temp').innerText = sensors.temperature || "--";
+            document.getElementById('hum').innerText = sensors.humidity || "--";
+            document.getElementById('air-val').innerText = sensors.air_quality || "--";
+            document.getElementById('water-val').innerText = sensors.water_level || "0";
+            document.getElementById('water-wave').style.height = `${sensors.water_level || 0}%`;
+
+            // Eco Mode Button
+            const isEco = currentStates.eco_mode === true;
+            const ecoBtn = document.getElementById('btn-eco-toggle');
+            ecoBtn.innerText = `ECO MODE: ${isEco ? 'ON' : 'OFF'}`;
+            ecoBtn.className = `px-4 py-2 border rounded-full text-[9px] font-black uppercase transition-all duration-300 ${isEco ? 'eco-on' : 'eco-off'}`;
+
+            // Dashboard Summary
+            let onCount = 0;
+            for(let i=1; i<=8; i++) if(currentStates[`relay${i}`]) onCount++;
+            document.getElementById('sw-on-count').innerText = onCount;
+
+            const dOn = currentStates.door === true;
+            document.getElementById('dash-door-status').innerText = dOn ? "Open" : "Locked";
+            document.getElementById('dash-door-status').className = `text-[10px] font-black uppercase ${dOn ? 'text-red-400' : 'text-blue-400'}`;
+
+            // Pintu Control
+            const dt = document.getElementById('door-status-text');
+            const dc = document.getElementById('door-card');
+            dt.innerText = dOn ? "Terbuka" : "Terkunci Aman";
+            dt.className = `text-[8px] font-bold uppercase ${dOn ? 'text-red-400' : 'text-slate-500'}`;
+            dc.style.borderColor = dOn ? '#ef4444' : '#3b82f6';
+            document.getElementById('btn-door-toggle').onclick = () => set(ref(db, `nexhome_v3/states/door`), !dOn);
+
+            // Switches Grid
+            const grid = document.getElementById('grid-switches');
+            grid.innerHTML = '';
+            for(let i=1; i<=8; i++) {
+                const id = `relay${i}`, isOn = currentStates[id] === true, name = currentNames[id] || `Saklar ${i}`, s = currentSchedules[id];
+                const card = document.createElement('div');
+                card.className = `glass p-4 rounded-3xl transition-all border-l-4 relative overflow-hidden ${isOn ? 'bg-blue-600/10 border-blue-500' : 'border-slate-800'}`;
+                let badge = (s && s.active) ? `<div class="absolute top-2 right-2 w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>` : "";
+                card.innerHTML = `${badge}<p class="text-[9px] font-black uppercase truncate">${name}</p><div class="flex justify-between items-center mt-2"><span class="text-[7px] font-bold text-slate-600 uppercase italic">RLY-${i}</span><div class="w-7 h-4 bg-slate-900 rounded-full relative"><div class="absolute w-2.5 h-2.5 bg-white rounded-full top-0.5 transition-all ${isOn ? 'right-0.5 bg-blue-400' : 'left-0.5'}"></div></div></div>`;
+                card.onclick = () => set(ref(db, `nexhome_v3/states/${id}`), !isOn);
+                card.onmousedown = card.ontouchstart = () => { pressTimer = setTimeout(() => openSettings(id), 700); };
+                card.onmouseup = card.onmouseleave = card.ontouchend = () => { clearTimeout(pressTimer); };
+                grid.appendChild(card);
+            }
+        });
+
+        window.setAllRelays = (s) => {
+            const up = {};
+            for(let i=1; i<=8; i++) up[`nexhome_v3/states/relay${i}`] = s;
+            update(ref(db), up);
         };
 
         window.toggleEcoMode = () => {
-            const isEcoNow = !currentStates.eco_mode;
-            const updates = { "nexhome_v3/states/eco_mode": isEcoNow };
-            if(isEcoNow) for(let i=1; i<=8; i++) updates[`nexhome_v3/states/relay${i}`] = false;
-            update(ref(db), updates);
-            speakGemini(isEcoNow ? "Mode hemat aku aktifkan ya, semua saklar otomatis mati." : "Mode hemat sudah aku matikan.");
+            const now = !currentStates.eco_mode;
+            const up = { "nexhome_v3/states/eco_mode": now };
+            if(now) for(let i=1; i<=8; i++) up[`nexhome_v3/states/relay${i}`] = false;
+            update(ref(db), up);
         };
 
         window.switchTab = (id) => {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.getElementById(`tab-${id}`).classList.add('active');
-            ['ai', 'dashboard', 'control'].forEach(tab => {
-                document.getElementById(`nav-${tab}`).className = `flex flex-col items-center gap-1 ${id===tab?'text-blue-400':'text-slate-600'}`;
-            });
+            ['ai', 'dashboard', 'control'].forEach(t => document.getElementById(`nav-${t}`).className = `flex flex-col items-center gap-1 ${id===t?'text-blue-400':'text-slate-600'}`);
         };
 
-        // --- DATA SYNC ---
-        onValue(rootRef, snap => {
-            const data = snap.val();
-            if(!data) return;
-            currentNames = data.names || {};
-            currentStates = data.states || {};
-            currentSensors = data.sensors || {};
-
-            // Sensors UI
-            document.getElementById('temp').innerText = data.sensors?.temperature ?? "--";
-            document.getElementById('hum').innerText = data.sensors?.humidity ?? "--";
-            document.getElementById('water-val').innerText = data.sensors?.water_level ?? 0;
-            document.getElementById('water-wave').style.height = `${data.sensors?.water_level ?? 0}%`;
-            document.getElementById('air-val').innerText = data.sensors?.air_quality ?? "--";
-            
-            // Perangkat Stats
-            let onCount = 0;
-            for(let i=1; i<=8; i++) if(data.states?.[`relay${i}`] === true) onCount++;
-            document.getElementById('sw-on-count').innerText = onCount;
-
-            // Eco Mode UI
-            const isEco = data.states?.eco_mode === true;
-            const ecoBtn = document.getElementById('btn-eco-toggle');
-            ecoBtn.innerText = `Eco Mode: ${isEco ? 'ON' : 'OFF'}`;
-            ecoBtn.className = `px-3 py-1.5 border rounded-full text-[8px] font-black uppercase transition-all ${isEco ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400' : 'bg-blue-500/10 border-blue-500/20 text-blue-400'}`;
-
-            // Door UI
-            const dOn = data.states?.door === true;
-            document.getElementById('insight-door-status').innerText = dOn ? "Open" : "Locked";
-            document.getElementById('insight-door-status').className = `text-xs font-black uppercase ${dOn ? 'text-red-400' : 'text-blue-400'}`;
-
-            // Switches Grid
-            const grid = document.getElementById('grid-switches');
-            grid.innerHTML = '';
-            for(let i=1; i<=8; i++){
-                const isOn = data.states?.[`relay${i}`] === true;
-                const name = data.names?.[`relay${i}`] || `Saklar ${i}`;
-                const card = document.createElement('div');
-                card.className = `glass p-4 rounded-3xl transition-all border-l-4 ${isOn ? 'bg-blue-600/10 border-blue-500' : 'border-slate-800'}`;
-                card.innerHTML = `<p class="text-[9px] font-black uppercase truncate">${name}</p><div class="flex justify-between items-center mt-2"><span class="text-[7px] font-bold text-slate-600 uppercase">RLY-${i}</span><div class="w-7 h-4 bg-slate-900 rounded-full relative"><div class="absolute w-2.5 h-2.5 bg-white rounded-full top-0.5 transition-all ${isOn ? 'right-0.5 bg-blue-400' : 'left-0.5'}"></div></div></div>`;
-                card.onclick = () => set(ref(db, `nexhome_v3/states/relay${i}`), !isOn);
-                grid.appendChild(card);
-            }
-            getFriendlySaran();
-        });
-
-        onValue(ref(db, ".info/connected"), s => { 
-            const isConn = s.val();
-            document.getElementById('cloud-dot').className = isConn ? "w-1.5 h-1.5 rounded-full bg-emerald-500" : "w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"; 
-            document.getElementById('log-text').innerText = isConn ? "Gemini Engine Siap" : "Menghubungkan Ulang...";
-        });
+        onValue(ref(db, ".info/connected"), s => document.getElementById('cloud-dot').className = s.val() ? "w-1.5 h-1.5 rounded-full bg-emerald-500" : "w-1.5 h-1.5 rounded-full bg-red-500");
     </script>
 </body>
 </html>
