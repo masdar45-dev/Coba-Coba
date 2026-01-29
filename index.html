@@ -3,202 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NexHome Masdar V4.6.5</title>
+    <title>NexHome Masdar V5.7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #0f172a; --accent: #38bdf8; --card-bg: rgba(30, 41, 59, 0.7); }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg); color: #f8fafc; overflow: hidden; height: 100vh; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg); color: #f8fafc; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         .glass { background: var(--card-bg); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .tab-content { display: none; height: calc(100vh - 190px); overflow-y: auto; padding-bottom: 100px; width: 100%; }
+        .tab-content { display: none; flex: 1; overflow-y: auto; padding-bottom: 120px; width: 100%; }
         .tab-content.active { display: flex; flex-direction: column; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         
-        /* Eco Mode Effects */
-        .eco-on { background: rgba(16, 185, 129, 0.2) !important; border-color: #10b981 !important; color: #10b981 !important; box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); animation: pulse-green 2s infinite; }
-        .eco-off { background: rgba(56, 189, 248, 0.05) !important; border-color: rgba(255,255,255,0.1) !important; color: #94a3b8 !important; }
-        @keyframes pulse-green { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        .eco-on { background: rgba(16, 185, 129, 0.2) !important; border-color: #10b981 !important; color: #10b981 !important; box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
+        .eco-off { background: rgba(239, 68, 68, 0.1) !important; border-color: rgba(239, 68, 68, 0.2) !important; color: #ef4444 !important; }
 
-        #login-screen { position: fixed; inset: 0; background: #0f172a; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+        #login-screen { position: fixed; inset: 0; background: #0f172a; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: transform 0.8s cubic-bezier(0.65, 0, 0.35, 1); }
         .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #38bdf8; margin: 0 10px; transition: 0.3s; }
         .pin-dot.filled { background: #38bdf8; box-shadow: 0 0 10px #38bdf8; transform: scale(1.2); }
         
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
-        .modal-content { background: #1e293b; border-radius: 2.5rem; width: 100%; max-width: 360px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
-
-        .switch-input { display: none; }
-        .switch-label { width: 42px; height: 22px; background: #334155; border-radius: 50px; position: relative; cursor: pointer; transition: 0.3s; }
-        .switch-label::after { content: ''; position: absolute; width: 18px; height: 18px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: 0.3s; }
-        .switch-input:checked + .switch-label { background: #38bdf8; }
-        .switch-input:checked + .switch-label::after { left: 22px; }
-
         .chat-bubble { max-width: 85%; padding: 12px 16px; border-radius: 20px; font-size: 13px; margin-bottom: 12px; }
-        .chat-user { background: #38bdf8; color: #0f172a; align-self: flex-end; border-bottom-right-radius: 4px; font-weight: 600; }
         .chat-ai { background: rgba(255,255,255,0.05); color: #f8fafc; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid rgba(255,255,255,0.1); }
+
+        /* Log Styling - Forced Top Visibility */
+        #log-outer-container { height: 70px; overflow: hidden; position: relative; }
+        #log-container { display: flex; flex-direction: column; }
+        .log-item { 
+            font-size: 9px; 
+            padding: 5px 10px; 
+            border-bottom: 1px solid rgba(255,255,255,0.05); 
+            font-family: monospace; 
+            animation: slideInDown 0.4s cubic-bezier(0, 1, 0, 1);
+            background: rgba(15, 23, 42, 0.5);
+        }
+        @keyframes slideInDown {
+            from { opacity: 0; transform: translateY(-20px); background: rgba(56, 189, 248, 0.2); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .critical-warning { border: 1px solid #ef4444; background: rgba(239, 68, 68, 0.1); }
     </style>
 </head>
 <body class="flex flex-col">
 
-    <!-- Modal Pengaturan (Long Press) -->
-    <div id="modal-settings" class="modal-overlay">
-        <div class="modal-content p-6 flex flex-col gap-5">
-            <div class="flex justify-between items-start">
-                <div>
-                    <h2 class="text-xs font-black uppercase text-blue-400">Pengaturan Perangkat</h2>
-                    <p id="modal-relay-id" class="text-[10px] font-bold text-slate-500 uppercase">RLY-X</p>
-                </div>
-                <button onclick="closeModal()" class="text-2xl text-slate-500">&times;</button>
-            </div>
-            <div class="space-y-2">
-                <label class="text-[8px] font-black uppercase text-slate-500 ml-1">Nama Perangkat</label>
-                <input type="text" id="input-relay-name" class="w-full bg-slate-900 border border-white/5 rounded-2xl p-4 text-sm font-bold focus:border-blue-500 outline-none">
-            </div>
-            <div class="space-y-3 p-4 bg-slate-900/50 rounded-3xl border border-white/5">
-                <div class="flex justify-between items-center mb-1">
-                    <label class="text-[8px] font-black uppercase text-slate-400">Aktifkan Penjadwalan</label>
-                    <div class="flex items-center">
-                        <input type="checkbox" id="switch-schedule-active" class="switch-input">
-                        <label for="switch-schedule-active" class="switch-label"></label>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3 pt-2">
-                    <div class="bg-slate-900 p-3 rounded-2xl border border-white/5">
-                        <p class="text-[7px] font-black text-emerald-400 uppercase mb-1">Waktu ON</p>
-                        <input type="time" id="input-schedule-on" class="bg-transparent text-xs font-bold w-full outline-none">
-                    </div>
-                    <div class="bg-slate-900 p-3 rounded-2xl border border-white/5">
-                        <p class="text-[7px] font-black text-red-400 uppercase mb-1">Waktu OFF</p>
-                        <input type="time" id="input-schedule-off" class="bg-transparent text-xs font-bold w-full outline-none">
-                    </div>
-                </div>
-            </div>
-            <button onclick="saveRelaySettings()" class="bg-blue-600 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest">Simpan Perubahan</button>
-        </div>
-    </div>
-
     <!-- Login Screen -->
     <div id="login-screen">
         <div class="mb-10 text-center">
-            <h1 class="text-2xl font-black italic uppercase">NexHome <span class="text-blue-400">Masdar</span></h1>
-            <p class="text-slate-500 text-[10px] mt-2 uppercase tracking-[0.3em] font-bold">V4.6.5 Secure OS</p>
+            <h1 class="text-2xl font-black italic uppercase text-white">NexHome <span class="text-blue-400">Masdar</span></h1>
+            <p class="text-slate-500 text-[10px] mt-2 uppercase tracking-[0.3em] font-bold">Verifikasi Identitas</p>
         </div>
         <div class="flex mb-16">
             <script>for(let i=0; i<4; i++) document.write(`<div class="pin-dot" id="dot-${i}"></div>`);</script>
         </div>
         <div class="grid grid-cols-3 gap-6">
             <script>
-                for(let i=1; i<=9; i++) document.write(`<button onclick="pressPin('${i}')" class="w-16 h-16 rounded-full glass text-xl font-bold active:scale-90 transition-all">${i}</button>`);
-                document.write(`<div></div><button onclick="pressPin('0')" class="w-16 h-16 rounded-full glass text-xl font-bold active:scale-90">0</button><button onclick="clearPin()" class="text-red-500 text-[10px] font-black uppercase">Reset</button>`);
+                for(let i=1; i<=9; i++) document.write(`<button onclick="pressPin('${i}')" class="w-16 h-16 rounded-full glass text-xl font-bold active:scale-90 transition-all text-white">${i}</button>`);
+                document.write(`<div></div><button onclick="pressPin('0')" class="w-16 h-16 rounded-full glass text-xl font-bold active:scale-90 text-white">0</button><button onclick="clearPin()" class="text-red-500 text-[10px] font-black uppercase">Reset</button>`);
             </script>
         </div>
     </div>
 
-    <!-- Header -->
-    <header class="p-5 flex flex-col gap-3 bg-slate-900/40 border-b border-white/5 backdrop-blur-md">
-        <div class="flex justify-between items-center">
-            <div>
-                <h1 class="text-base font-black italic uppercase">NexHome <span class="text-blue-400">Masdar</span></h1>
-                <div class="flex items-center gap-1.5">
+    <!-- Header & GLOBAL LOG -->
+    <div class="flex flex-col bg-slate-900/80 border-b border-white/5 backdrop-blur-2xl sticky top-0 z-[100]">
+        <header class="p-4 pb-2 flex justify-between items-start">
+            <div class="flex flex-col">
+                <h1 class="text-sm font-black italic uppercase text-white leading-none">NexHome <span class="text-blue-400">Masdar</span></h1>
+                <div class="flex items-center gap-1.5 mt-1.5">
                     <div id="cloud-dot" class="w-1.5 h-1.5 rounded-full bg-red-500"></div>
-                    <span class="text-[8px] font-bold text-slate-500 uppercase tracking-widest italic">Cloud Connected</span>
+                    <span id="digital-clock" class="text-[9px] font-bold text-slate-300">00:00:00</span>
                 </div>
             </div>
-            <button id="btn-eco-toggle" onclick="toggleEcoMode()" class="px-4 py-2 border rounded-full text-[9px] font-black uppercase transition-all duration-300 eco-off">
-                ECO MODE: --
-            </button>
-        </div>
-    </header>
+            
+            <div class="flex items-center gap-3">
+                <!-- Weather Widget -->
+                <div class="flex flex-col items-end mr-1">
+                    <div class="flex items-center gap-1">
+                        <span id="weather-icon" class="text-xs">☀️</span>
+                        <span id="weather-temp" class="text-[10px] font-bold text-white">--°C</span>
+                    </div>
+                    <span id="weather-desc" class="text-[7px] font-black uppercase text-slate-500 tracking-tighter">Memuat...</span>
+                </div>
 
-    <!-- Main -->
-    <main class="flex-1 relative overflow-hidden">
+                <button id="btn-eco-toggle" onclick="toggleEcoMode()" class="px-4 py-2 border rounded-full text-[8px] font-black uppercase transition-all duration-300 eco-off shadow-lg">
+                    ECO: --
+                </button>
+            </div>
+        </header>
         
-        <!-- ASISTEN -->
-        <div id="tab-ai" class="tab-content active p-5 scrollbar-hide">
-            <div class="flex-1 flex flex-col space-y-4 overflow-y-auto" id="chat-container">
-                <div class="chat-bubble chat-ai italic">Siap melayani, Masdar. Ada instruksi untuk sistem rumah hari ini?</div>
+        <!-- FIXED LOG AREA: ALWAYS SHOWS NEWEST AT TOP -->
+        <div class="px-4 pb-3">
+            <div id="log-outer-container" class="bg-black/60 rounded-xl border border-white/10 shadow-inner">
+                <div id="log-container">
+                    <!-- New logs are prepended here -->
+                    <div class="log-item text-slate-500 italic">Sistem Siap. Menunggu aktivitas...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 relative">
+        <!-- AI TAB -->
+        <div id="tab-ai" class="tab-content active p-4 scrollbar-hide">
+            <div class="flex-1 flex flex-col space-y-4 overflow-y-auto pb-40" id="chat-container">
+                <div id="ai-greeting-box" class="chat-bubble chat-ai italic bg-blue-500/5">
+                    Siap melayani. Masukkan PIN untuk laporan.
+                </div>
+            </div>
+            <div class="absolute bottom-24 left-0 right-0 flex justify-center px-5 pointer-events-none z-40">
+                <button id="btn-mic" onclick="toggleMic()" class="pointer-events-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center shadow-2xl shadow-blue-900/60 transition-all active:scale-90 border-4 border-slate-900">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-white"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                </button>
             </div>
         </div>
 
-        <!-- DASHBOARD -->
-        <div id="tab-dashboard" class="tab-content p-5 space-y-4 scrollbar-hide">
+        <!-- DASHBOARD TAB -->
+        <div id="tab-dashboard" class="tab-content p-4 space-y-3 scrollbar-hide">
             <div class="grid grid-cols-2 gap-3">
                 <div class="glass p-4 rounded-3xl">
-                    <p class="text-[8px] font-bold text-slate-500 uppercase mb-2">Suhu & Lembab</p>
+                    <p class="text-[8px] font-bold text-slate-500 uppercase mb-2">Iklim Ruang</p>
                     <div class="flex justify-between items-end">
-                        <p class="text-2xl font-black"><span id="temp">--</span>°</p>
+                        <p class="text-2xl font-black text-white"><span id="temp">--</span>°</p>
                         <p class="text-xs font-bold text-blue-400"><span id="hum">--</span>%</p>
                     </div>
                 </div>
-                <div class="glass p-4 rounded-3xl">
-                    <p class="text-[8px] font-bold text-slate-500 uppercase mb-2">Udara (PPM)</p>
-                    <p id="air-status" class="text-sm font-black uppercase text-emerald-400">Baik</p>
-                    <p class="text-[8px] text-slate-500 mt-1"><span id="air-val">--</span> PPM</p>
+                <div id="card-air" class="glass p-4 rounded-3xl">
+                    <p class="text-[8px] font-bold text-slate-500 uppercase mb-2">Kualitas Udara</p>
+                    <p id="air-status" class="text-sm font-black uppercase text-slate-400">---</p>
+                    <p class="text-[8px] text-slate-500 mt-1 font-bold"><span id="air-val">--</span> PPM</p>
                 </div>
             </div>
-
-            <div class="glass p-6 rounded-[2.5rem] relative overflow-hidden h-36 flex flex-col justify-end">
-                <p class="text-[8px] font-black text-slate-500 uppercase absolute top-6 left-6">Water Level</p>
-                <p class="text-4xl font-black z-10"><span id="water-val">--</span><span class="text-blue-400 text-lg ml-1">%</span></p>
+            <div id="card-water" class="glass p-5 rounded-[2.5rem] relative overflow-hidden h-32 flex flex-col justify-end">
+                <p class="text-[8px] font-black text-slate-500 uppercase absolute top-6 left-6">Level Air Tandon</p>
+                <p class="text-4xl font-black z-10 text-white"><span id="water-val">--</span><span class="text-blue-400 text-lg ml-1">%</span></p>
                 <div id="water-wave" class="absolute bottom-0 left-0 right-0 bg-blue-500/20 transition-all duration-1000" style="height: 0%"></div>
             </div>
-
-            <!-- KEMBALI: Status Ringkasan -->
             <div class="grid grid-cols-2 gap-3">
                 <div class="glass p-4 rounded-3xl text-center">
-                    <p class="text-[8px] font-bold text-slate-500 uppercase mb-1">Lampu Aktif</p>
+                    <p class="text-[8px] font-bold text-slate-500 uppercase mb-1">Total Aktif</p>
                     <p id="sw-on-count" class="text-xl font-black text-blue-400">0</p>
                 </div>
-                <div class="glass p-4 rounded-3xl text-center">
-                    <p class="text-[8px] font-bold text-slate-500 uppercase mb-1">Pintu Utama</p>
-                    <p id="dash-door-status" class="text-[10px] font-black uppercase text-blue-400">Locked</p>
+                <div id="card-door-dash" class="glass p-4 rounded-3xl text-center">
+                    <p class="text-[8px] font-bold text-slate-500 uppercase mb-1">Status Pintu</p>
+                    <p id="dash-door-status" class="text-[10px] font-black uppercase text-blue-400">---</p>
                 </div>
             </div>
         </div>
 
-        <!-- KONTROL -->
-        <div id="tab-control" class="tab-content p-5 scrollbar-hide">
-            <div class="mb-6">
-                <p class="text-[8px] font-black text-slate-500 uppercase mb-3 ml-1">Keamanan Pintu</p>
-                <div id="door-card" class="glass p-5 rounded-[2rem] flex items-center justify-between border-l-4 border-blue-500">
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-blue-400"><path d="M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16M15 11h.01"></path></svg>
-                        </div>
-                        <div>
-                            <p class="text-[10px] font-black uppercase">Pintu Utama</p>
-                            <p id="door-status-text" class="text-[8px] font-bold text-slate-500 uppercase">Checking...</p>
-                        </div>
+        <!-- CONTROL TAB -->
+        <div id="tab-control" class="tab-content p-4 scrollbar-hide">
+            <!-- Global Actions -->
+            <div class="grid grid-cols-2 gap-2 mb-4">
+                <button onclick="setAllRelays(true)" class="bg-blue-600/20 border border-blue-500/30 py-3 rounded-2xl text-[9px] font-black text-blue-400 uppercase tracking-widest active:scale-95 transition-all">ON Semua</button>
+                <button onclick="setAllRelays(false)" class="bg-red-600/20 border border-red-500/30 py-3 rounded-2xl text-[9px] font-black text-red-400 uppercase tracking-widest active:scale-95 transition-all">OFF Semua</button>
+            </div>
+
+            <!-- Door Control Button -->
+            <div id="door-control-card" class="glass p-5 rounded-3xl border-l-4 border-slate-800 mb-4 transition-all" onclick="toggleDoor()">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-[9px] font-black text-white uppercase">Pintu Utama (Door Lock)</p>
+                        <p id="door-status-text" class="text-[7px] font-bold text-slate-500 uppercase mt-1">Memuat...</p>
                     </div>
-                    <button id="btn-door-toggle" class="px-5 py-2.5 rounded-2xl bg-blue-600 text-[9px] font-black uppercase">Aksi</button>
+                    <div id="door-icon" class="w-10 h-10 rounded-full flex items-center justify-center bg-slate-900 border border-white/5">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-slate-500"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    </div>
                 </div>
             </div>
-
-            <p class="text-[8px] font-black text-slate-500 uppercase mb-3 ml-1">Kontrol Perangkat</p>
             
-            <!-- KEMBALI: Kontrol Massal -->
-            <div class="flex gap-2 mb-4">
-                <button onclick="setAllRelays(true)" class="flex-1 py-3 glass rounded-2xl text-[8px] font-black uppercase text-blue-400 border-blue-500/20 border">On Semua</button>
-                <button onclick="setAllRelays(false)" class="flex-1 py-3 glass rounded-2xl text-[8px] font-black uppercase text-slate-400 border-white/5 border">Off Semua</button>
-            </div>
-
-            <div id="grid-switches" class="grid grid-cols-2 gap-3"></div>
-            <p class="text-center text-[7px] font-bold text-slate-600 uppercase mt-8 italic">Tekan lama kartu saklar untuk ganti nama/jadwal</p>
+            <div id="grid-switches" class="grid grid-cols-2 gap-3 pb-8"></div>
         </div>
     </main>
 
     <!-- Navigation -->
-    <nav class="fixed bottom-0 left-0 right-0 glass h-20 flex items-center justify-around px-4 pb-4 z-50 rounded-t-[2.5rem]">
+    <nav class="fixed bottom-0 left-0 right-0 glass h-20 flex items-center justify-around px-4 pb-4 z-[500] rounded-t-[2.5rem]">
         <button onclick="switchTab('ai')" id="nav-ai" class="flex flex-col items-center gap-1 text-blue-400">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-            <span class="text-[7px] font-black uppercase tracking-widest">Asisten</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span class="text-[7px] font-black uppercase tracking-widest">AI</span>
         </button>
         <button onclick="switchTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center gap-1 text-slate-600">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
             <span class="text-[7px] font-black uppercase tracking-widest">Dash</span>
         </button>
         <button onclick="switchTab('control')" id="nav-control" class="flex flex-col items-center gap-1 text-slate-600">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect><polyline points="17 2 12 7 7 2"></polyline></svg>
-            <span class="text-[7px] font-black uppercase tracking-widest">Kontrol</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>
+            <span class="text-[7px] font-black uppercase tracking-widest">Ctrl</span>
         </button>
     </nav>
 
@@ -217,122 +205,182 @@
         const db = getDatabase(app);
         const rootRef = ref(db, "nexhome_v3");
 
-        let currentNames = {}, currentStates = {}, currentSchedules = {};
-        let selectedRelayId = null, pinInput = "", pressTimer = null;
-        const CORRECT_PIN = "1234";
+        let currentNames = {}, currentStates = {}, currentSensors = {}, hasReported = false;
+        let lastStates = {}, lastSensors = {};
+        const synth = window.speechSynthesis;
 
-        // --- AUTH ---
-        window.pressPin = (n) => {
-            if(pinInput.length < 4) {
-                pinInput += n;
-                for(let i=0; i<4; i++) document.getElementById(`dot-${i}`).className = `pin-dot ${pinInput.length > i ? 'filled' : ''}`;
-                if(pinInput === CORRECT_PIN) {
-                    setTimeout(() => { document.getElementById('login-screen').style.transform = 'translateY(-100%)'; switchTab('ai'); }, 300);
-                } else if(pinInput.length === 4) {
-                    setTimeout(() => { pinInput = ""; for(let i=0; i<4; i++) document.getElementById(`dot-${i}`).className = 'pin-dot'; }, 200);
-                }
-            }
-        };
-        window.clearPin = () => { pinInput = ""; for(let i=0; i<4; i++) document.getElementById(`dot-${i}`).className = 'pin-dot'; };
-
-        // --- SCHEDULER ---
-        setInterval(() => {
+        // --- CLOCK & WEATHER ---
+        function updateClock() {
             const now = new Date();
-            const time = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-            for(let i=1; i<=8; i++) {
-                const id = `relay${i}`, s = currentSchedules[id];
-                if(s && s.active) {
-                    if(s.on === time && !currentStates[id]) set(ref(db, `nexhome_v3/states/${id}`), true);
-                    if(s.off === time && currentStates[id]) set(ref(db, `nexhome_v3/states/${id}`), false);
+            document.getElementById('digital-clock').innerText = now.toLocaleTimeString('id-ID', { hour12: false });
+        }
+        setInterval(updateClock, 1000);
+
+        function updateWeather() {
+            const hours = new Date().getHours();
+            const isDay = hours > 6 && hours < 18;
+            document.getElementById('weather-temp').innerText = isDay ? "31°C" : "26°C";
+            document.getElementById('weather-icon').innerText = isDay ? "☀️" : "🌙";
+            document.getElementById('weather-desc').innerText = isDay ? "Cerah Berawan" : "Langit Cerah";
+        }
+        updateWeather();
+
+        // --- LOG ENGINE (FIXED: ALWAYS PREPEND TO TOP) ---
+        function addLog(msg, type = "info") {
+            const container = document.getElementById('log-container');
+            const div = document.createElement('div');
+            div.className = "log-item";
+            const color = type === "alert" ? "text-red-400" : "text-blue-400";
+            div.innerHTML = `<span class="${color} font-bold">[${new Date().toLocaleTimeString('id-ID',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'})}]</span> ${msg}`;
+            
+            // PREPEND: Masukkan di urutan pertama (paling atas)
+            container.prepend(div);
+            
+            // Batasi log agar tidak memberatkan browser
+            if(container.children.length > 20) container.lastChild.remove();
+        }
+
+        function speak(text) {
+            if (synth.speaking) synth.cancel();
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = 'id-ID';
+            utter.rate = 1.05;
+            synth.speak(utter);
+        }
+
+        function runHouseReport() {
+            const hour = new Date().getHours();
+            let greet = hour < 11 ? "Pagi" : hour < 15 ? "Siang" : hour < 18 ? "Sore" : "Malam";
+            
+            const air = currentSensors.air_quality || 0;
+            const water = currentSensors.water_level || 0;
+            const door = currentStates.door === true;
+            const weather = document.getElementById('weather-desc').innerText;
+            
+            let issues = [];
+            if (air > 150) issues.push(`Kualitas udara buruk, ${air} PPM.`);
+            if (water < 25) issues.push(`Air tandon sisa ${water} persen.`);
+            if (door) issues.push(`Pintu utama terbuka.`);
+
+            let reportText = `Selamat ${greet}, Masdar. `;
+            if (issues.length > 0) {
+                reportText += `Perhatian: ${issues.join(" Dan ")}. `;
+                reportText += `Cuaca ${weather}.`;
+            } else {
+                reportText += `Rumah aman. Cuaca ${weather}.`;
+            }
+
+            document.getElementById('ai-greeting-box').innerHTML = `<strong>${greet}, Masdar!</strong><br>${reportText}`;
+            speak(reportText);
+            addLog("AI: Melakukan pemeriksaan rutin.");
+        }
+
+        window.pressPin = (n) => {
+            let dots = document.querySelectorAll('.pin-dot');
+            let input = Array.from(dots).filter(d => d.classList.contains('filled')).length;
+            if(input < 4) {
+                dots[input].classList.add('filled');
+                if(input === 3) {
+                    setTimeout(() => {
+                        document.getElementById('login-screen').style.transform = 'translateY(-100%)';
+                        if(!hasReported) { runHouseReport(); hasReported = true; }
+                        addLog("Akses diterima.");
+                    }, 400);
                 }
             }
-        }, 30000);
-
-        // --- MODAL ---
-        window.openSettings = (id) => {
-            selectedRelayId = id;
-            const rIdx = id.replace('relay', '');
-            document.getElementById('modal-relay-id').innerText = `KONFIGURASI RLY-${rIdx}`;
-            document.getElementById('input-relay-name').value = currentNames[id] || `Saklar ${rIdx}`;
-            const s = currentSchedules[id] || { on: '', off: '', active: false };
-            document.getElementById('input-schedule-on').value = s.on || '';
-            document.getElementById('input-schedule-off').value = s.off || '';
-            document.getElementById('switch-schedule-active').checked = s.active || false;
-            document.getElementById('modal-settings').style.display = 'flex';
         };
+        window.clearPin = () => document.querySelectorAll('.pin-dot').forEach(d => d.classList.remove('filled'));
 
-        window.closeModal = () => document.getElementById('modal-settings').style.display = 'none';
-
-        window.saveRelaySettings = () => {
-            const up = {};
-            up[`nexhome_v3/names/${selectedRelayId}`] = document.getElementById('input-relay-name').value;
-            up[`nexhome_v3/schedules/${selectedRelayId}`] = {
-                on: document.getElementById('input-schedule-on').value,
-                off: document.getElementById('input-schedule-off').value,
-                active: document.getElementById('switch-schedule-active').checked
-            };
-            update(ref(db), up);
-            closeModal();
-        };
-
-        // --- SYNC ---
+        // --- DATABASE LISTENER ---
         onValue(rootRef, snap => {
             const data = snap.val() || {};
             currentStates = data.states || {};
+            currentSensors = data.sensors || {};
             currentNames = data.names || {};
-            currentSchedules = data.schedules || {};
-            const sensors = data.sensors || {};
 
-            // Sensors
-            document.getElementById('temp').innerText = sensors.temperature || "--";
-            document.getElementById('hum').innerText = sensors.humidity || "--";
-            document.getElementById('air-val').innerText = sensors.air_quality || "--";
-            document.getElementById('water-val').innerText = sensors.water_level || "0";
-            document.getElementById('water-wave').style.height = `${sensors.water_level || 0}%`;
+            // Track Changes for Logs
+            if (lastSensors.air_quality !== undefined && Math.abs(currentSensors.air_quality - lastSensors.air_quality) > 10) {
+                addLog(`Udara berubah: ${currentSensors.air_quality} PPM`);
+            }
+            if (lastStates.door !== undefined && currentStates.door !== lastStates.door) {
+                addLog(`Pintu Utama: ${currentStates.door ? 'DIBUKA' : 'DIKUNCI'}`);
+            }
+            for(let i=1; i<=8; i++) {
+                const id = `relay${i}`;
+                if (lastStates[id] !== undefined && currentStates[id] !== lastStates[id]) {
+                    addLog(`${currentNames[id] || id}: ${currentStates[id] ? 'DINYALAKAN' : 'DIMATIKAN'}`);
+                }
+            }
 
-            // Eco Mode Button
+            // Sync UI
+            document.getElementById('air-val').innerText = currentSensors.air_quality || "0";
+            document.getElementById('temp').innerText = currentSensors.temperature || "--";
+            document.getElementById('hum').innerText = currentSensors.humidity || "--";
+            document.getElementById('water-val').innerText = currentSensors.water_level || "0";
+            document.getElementById('water-wave').style.height = `${currentSensors.water_level || 0}%`;
+
+            const airVal = currentSensors.air_quality || 0;
+            const airStatus = document.getElementById('air-status');
+            if(airVal > 150) {
+                airStatus.innerText = "BURUK"; airStatus.className = "text-sm font-black text-red-500 uppercase";
+                document.getElementById('card-air').classList.add('critical-warning');
+            } else {
+                airStatus.innerText = "BERSIH"; airStatus.className = "text-sm font-black text-emerald-400 uppercase";
+                document.getElementById('card-air').classList.remove('critical-warning');
+            }
+
+            // Door UI
+            const isDoorOpen = currentStates.door === true;
+            document.getElementById('dash-door-status').innerText = isDoorOpen ? "TERBUKA" : "LOCKED";
+            document.getElementById('dash-door-status').className = isDoorOpen ? "text-[10px] font-black text-red-500 uppercase" : "text-[10px] font-black text-blue-400 uppercase";
+            
+            const doorCard = document.getElementById('door-control-card');
+            const doorTxt = document.getElementById('door-status-text');
+            const doorIco = document.getElementById('door-icon');
+            if(isDoorOpen) {
+                doorCard.className = "glass p-5 rounded-3xl border-l-4 border-red-500 mb-4 bg-red-600/5 transition-all";
+                doorTxt.innerText = "Status: Terbuka / Tidak Aman";
+                doorTxt.className = "text-[7px] font-bold text-red-400 uppercase mt-1";
+                doorIco.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-red-500"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`;
+            } else {
+                doorCard.className = "glass p-5 rounded-3xl border-l-4 border-emerald-500 mb-4 bg-emerald-600/5 transition-all";
+                doorTxt.innerText = "Status: Terkunci Rapat";
+                doorTxt.className = "text-[7px] font-bold text-emerald-400 uppercase mt-1";
+                doorIco.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-emerald-500"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+            }
+
+            // Eco Mode
             const isEco = currentStates.eco_mode === true;
             const ecoBtn = document.getElementById('btn-eco-toggle');
-            ecoBtn.innerText = `ECO MODE: ${isEco ? 'ON' : 'OFF'}`;
-            ecoBtn.className = `px-4 py-2 border rounded-full text-[9px] font-black uppercase transition-all duration-300 ${isEco ? 'eco-on' : 'eco-off'}`;
+            ecoBtn.innerText = `ECO: ${isEco ? 'ON' : 'OFF'}`;
+            ecoBtn.className = `px-4 py-2 border rounded-full text-[8px] font-black uppercase transition-all ${isEco ? 'eco-on' : 'eco-off'}`;
 
-            // Dashboard Summary
-            let onCount = 0;
-            for(let i=1; i<=8; i++) if(currentStates[`relay${i}`]) onCount++;
-            document.getElementById('sw-on-count').innerText = onCount;
-
-            const dOn = currentStates.door === true;
-            document.getElementById('dash-door-status').innerText = dOn ? "Open" : "Locked";
-            document.getElementById('dash-door-status').className = `text-[10px] font-black uppercase ${dOn ? 'text-red-400' : 'text-blue-400'}`;
-
-            // Pintu Control
-            const dt = document.getElementById('door-status-text');
-            const dc = document.getElementById('door-card');
-            dt.innerText = dOn ? "Terbuka" : "Terkunci Aman";
-            dt.className = `text-[8px] font-bold uppercase ${dOn ? 'text-red-400' : 'text-slate-500'}`;
-            dc.style.borderColor = dOn ? '#ef4444' : '#3b82f6';
-            document.getElementById('btn-door-toggle').onclick = () => set(ref(db, `nexhome_v3/states/door`), !dOn);
-
-            // Switches Grid
+            // Switches
             const grid = document.getElementById('grid-switches');
             grid.innerHTML = '';
+            let onCount = 0;
             for(let i=1; i<=8; i++) {
-                const id = `relay${i}`, isOn = currentStates[id] === true, name = currentNames[id] || `Saklar ${i}`, s = currentSchedules[id];
+                const id = `relay${i}`, isOn = currentStates[id] === true;
+                if(isOn) onCount++;
                 const card = document.createElement('div');
-                card.className = `glass p-4 rounded-3xl transition-all border-l-4 relative overflow-hidden ${isOn ? 'bg-blue-600/10 border-blue-500' : 'border-slate-800'}`;
-                let badge = (s && s.active) ? `<div class="absolute top-2 right-2 w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>` : "";
-                card.innerHTML = `${badge}<p class="text-[9px] font-black uppercase truncate">${name}</p><div class="flex justify-between items-center mt-2"><span class="text-[7px] font-bold text-slate-600 uppercase italic">RLY-${i}</span><div class="w-7 h-4 bg-slate-900 rounded-full relative"><div class="absolute w-2.5 h-2.5 bg-white rounded-full top-0.5 transition-all ${isOn ? 'right-0.5 bg-blue-400' : 'left-0.5'}"></div></div></div>`;
+                card.className = `glass p-5 rounded-3xl border-l-4 transition-all ${isOn ? 'border-blue-500 bg-blue-600/10' : 'border-slate-800'}`;
+                card.innerHTML = `<p class="text-[9px] font-black text-white uppercase truncate">${currentNames[id] || `Saklar ${i}`}</p><div class="flex justify-between items-center mt-4"><span class="text-[7px] font-bold text-slate-600">CH-${i}</span><div class="w-7 h-4 bg-slate-950 rounded-full relative"><div class="absolute w-2.5 h-2.5 bg-white rounded-full top-0.5 transition-all ${isOn ? 'right-0.5 bg-blue-400' : 'left-0.5'}"></div></div></div>`;
                 card.onclick = () => set(ref(db, `nexhome_v3/states/${id}`), !isOn);
-                card.onmousedown = card.ontouchstart = () => { pressTimer = setTimeout(() => openSettings(id), 700); };
-                card.onmouseup = card.onmouseleave = card.ontouchend = () => { clearTimeout(pressTimer); };
                 grid.appendChild(card);
             }
+            document.getElementById('sw-on-count').innerText = onCount;
+
+            lastStates = {...currentStates};
+            lastSensors = {...currentSensors};
         });
 
+        window.toggleDoor = () => set(ref(db, "nexhome_v3/states/door"), !currentStates.door);
+        
         window.setAllRelays = (s) => {
             const up = {};
             for(let i=1; i<=8; i++) up[`nexhome_v3/states/relay${i}`] = s;
             update(ref(db), up);
+            addLog(`Global: Semua Saklar ${s ? 'ON' : 'OFF'}`);
         };
 
         window.toggleEcoMode = () => {
@@ -348,7 +396,9 @@
             ['ai', 'dashboard', 'control'].forEach(t => document.getElementById(`nav-${t}`).className = `flex flex-col items-center gap-1 ${id===t?'text-blue-400':'text-slate-600'}`);
         };
 
-        onValue(ref(db, ".info/connected"), s => document.getElementById('cloud-dot').className = s.val() ? "w-1.5 h-1.5 rounded-full bg-emerald-500" : "w-1.5 h-1.5 rounded-full bg-red-500");
+        onValue(ref(db, ".info/connected"), s => {
+            document.getElementById('cloud-dot').className = s.val() ? "w-1.5 h-1.5 rounded-full bg-emerald-500" : "w-1.5 h-1.5 rounded-full bg-red-500";
+        });
     </script>
 </body>
 </html>
